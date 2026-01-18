@@ -386,4 +386,269 @@
   }
 
   bgmVol.addEventListener("input", () => {
-    bgm.volume = parse
+    bgm.volume = parseFloat(bgmVol.value || "0.35");
+  });
+  bgm.volume = parseFloat(bgmVol.value || "0.35");
+
+  bgmSelect.addEventListener("change", () => {
+    setBgmSrc(bgmSelect.value);
+  });
+
+  btnBgmPlay.addEventListener("click", async () => {
+    if (!bgm.src && bgmSelect.value) setBgmSrc(bgmSelect.value);
+    try { await bgm.play(); } catch(e) {
+      alert("BGMを再生できませんでした。音源パス（audio/...）が存在するか確認してください。");
+    }
+  });
+
+  btnBgmStop.addEventListener("click", () => {
+    bgm.pause();
+    bgm.currentTime = 0;
+  });
+
+  // ---- Timer state ----
+  const Phase = { WORK:"work", BREAK:"break", LONG_BREAK:"long_break" };
+
+  let settings = {
+    workMin: 25,
+    breakMin: 5,
+    sets: 4,
+    longEvery: 4,   // 0=なし
+    longMin: 15,
+    autoNext: true,
+    presetLabel: "25/5",
+  };
+
+  let timer = {
+    running: false,
+    phase: Phase.WORK,
+    setIndex: 1,
+    remainingSec: 25*60,
+    phaseTotalSec: 25*60,
+    intervalId: null,
+  };
+
+  // ---- UI ----
+  const ui = {
+    preset: $("preset"),
+    sets: $("sets"),
+    workMin: $("workMin"),
+    breakMin: $("breakMin"),
+    longEvery: $("longEvery"),
+    longMin: $("longMin"),
+    autoNext: $("autoNext"),
+    btnApply: $("btnApply"),
+
+    btnStart: $("btnStart"),
+    btnPause: $("btnPause"),
+    btnReset: $("btnReset"),
+    btnSkip: $("btnSkip"),
+
+    presetLabel: $("presetLabel"),
+    phaseDot: $("phaseDot"),
+    phaseText: $("phaseText"),
+    timeText: $("timeText"),
+    bar: $("bar"),
+    setCount: $("setCount"),
+    setTotal: $("setTotal"),
+
+    rippleWrap: $("rippleWrap"),
+    rippleText: $("rippleText"),
+  };
+
+  function applySettingsToInputs(){
+    ui.sets.value = settings.sets;
+    ui.workMin.value = settings.workMin;
+    ui.breakMin.value = settings.breakMin;
+    ui.longEvery.value = settings.longEvery;
+    ui.longMin.value = settings.longMin;
+    ui.autoNext.checked = settings.autoNext;
+
+    ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
+    ui.setTotal.textContent = String(settings.sets);
+  }
+
+  function isBreakPhase() {
+    return timer.phase === Phase.BREAK || timer.phase === Phase.LONG_BREAK;
+  }
+
+  function updateRippleUI(){
+    // 休憩中だけ波紋ON
+    ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
+    ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
+
+    if (timer.phase === Phase.BREAK) {
+      ui.rippleText.textContent = "休憩中：肩を落として、呼吸をひとつ。";
+    } else if (timer.phase === Phase.LONG_BREAK) {
+      ui.rippleText.textContent = "長休憩：水分補給。目を遠くに。";
+    } else {
+      ui.rippleText.textContent = "";
+    }
+  }
+
+  function updatePhaseUI(){
+    const breakMode = isBreakPhase();
+    ui.phaseDot.classList.toggle("break", breakMode);
+    ui.bar.classList.toggle("break", breakMode);
+
+    ui.phaseText.textContent =
+      timer.phase === Phase.WORK ? "作業" :
+      timer.phase === Phase.BREAK ? "休憩" : "長休憩";
+
+    ui.setCount.textContent = String(timer.setIndex);
+    ui.timeText.textContent = fmtMMSS(timer.remainingSec);
+
+    const pct = timer.phaseTotalSec > 0
+      ? ((timer.phaseTotalSec - timer.remainingSec) / timer.phaseTotalSec) * 100
+      : 0;
+    ui.bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+
+    document.title = `${ui.phaseText.textContent} ${fmtMMSS(timer.remainingSec)} - ポモドーロ`;
+
+    updateRippleUI();
+  }
+
+  function setButtons(){
+    ui.btnStart.disabled = timer.running;
+    ui.btnPause.disabled = !timer.running;
+  }
+
+  function stopInterval(){
+    if (timer.intervalId){
+      clearInterval(timer.intervalId);
+      timer.intervalId = null;
+    }
+    timer.running = false;
+    setButtons();
+  }
+
+  function startInterval(){
+    if (timer.running) return;
+    timer.running = true;
+    setButtons();
+    timer.intervalId = setInterval(() => {
+      timer.remainingSec -= 1;
+      if (timer.remainingSec <= 0){
+        timer.remainingSec = 0;
+        updatePhaseUI();
+        onPhaseComplete();
+      } else {
+        updatePhaseUI();
+      }
+    }, 1000);
+  }
+
+  function resetToPhase(phase){
+    timer.phase = phase;
+    if (phase === Phase.WORK){
+      timer.phaseTotalSec = settings.workMin * 60;
+      timer.remainingSec = settings.workMin * 60;
+    } else if (phase === Phase.BREAK){
+      timer.phaseTotalSec = settings.breakMin * 60;
+      timer.remainingSec = settings.breakMin * 60;
+    } else {
+      timer.phaseTotalSec = settings.longMin * 60;
+      timer.remainingSec = settings.longMin * 60;
+    }
+    updatePhaseUI();
+  }
+
+  function resetAll(){
+    stopInterval();
+    timer.setIndex = 1;
+    resetToPhase(Phase.WORK);
+  }
+
+  function isLongBreakDue(){
+    if (settings.longEvery <= 0) return false;
+    return (timer.setIndex % settings.longEvery) === 0;
+  }
+
+  function onPhaseComplete(){
+    stopInterval();
+
+    // 次フェーズへ
+    if (timer.phase === Phase.WORK){
+      // 作業→休憩
+      resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+    } else {
+      // 休憩→作業
+      timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+      resetToPhase(Phase.WORK);
+    }
+
+    if (settings.autoNext) startInterval();
+  }
+
+  function skipPhase(){
+    timer.remainingSec = 0;
+    updatePhaseUI();
+    onPhaseComplete();
+  }
+
+  // ---- Presets ----
+  function parsePresetValue(v){
+    const [w,b,s,l] = v.split("_").map(x => parseInt(x, 10));
+    return { workMin:w, breakMin:b, sets:s, longEvery:s, longMin:l };
+  }
+
+  function applyPreset(value){
+    if (value === "custom"){
+      settings.presetLabel = "Custom";
+      ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
+      return;
+    }
+    const p = parsePresetValue(value);
+    settings.workMin = p.workMin;
+    settings.breakMin = p.breakMin;
+    settings.sets = p.sets;
+    settings.longEvery = p.longEvery;
+    settings.longMin = p.longMin;
+    settings.presetLabel = `${p.workMin}/${p.breakMin}`;
+    applySettingsToInputs();
+  }
+
+  function readSettingsFromInputs(){
+    const workMin = Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25));
+    const breakMin = Math.max(1, Math.min(60, parseInt(ui.breakMin.value,10) || 5));
+    const sets = Math.max(1, Math.min(12, parseInt(ui.sets.value,10) || 4));
+    const longEvery = Math.max(0, Math.min(12, parseInt(ui.longEvery.value,10) || 0));
+    const longMin = Math.max(1, Math.min(120, parseInt(ui.longMin.value,10) || 15));
+
+    settings.workMin = workMin;
+    settings.breakMin = breakMin;
+    settings.sets = sets;
+    settings.longEvery = longEvery;
+    settings.longMin = longMin;
+    settings.autoNext = ui.autoNext.checked;
+
+    settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
+  }
+
+  // ---- Events ----
+  ui.preset.addEventListener("change", () => applyPreset(ui.preset.value));
+
+  ui.btnApply.addEventListener("click", () => {
+    readSettingsFromInputs();
+    applySettingsToInputs();
+    if (!timer.running) resetAll(); // 停止中なら設定反映して初期化
+  });
+
+  ui.btnStart.addEventListener("click", () => startInterval());
+  ui.btnPause.addEventListener("click", () => stopInterval());
+  ui.btnReset.addEventListener("click", () => resetAll());
+  ui.btnSkip.addEventListener("click", () => skipPhase());
+
+  // ---- Init ----
+  (function init(){
+    applySettingsToInputs();
+    resetAll();
+    setButtons();
+    // BGM: 初期値が存在する場合に備え
+    if (bgmSelect.value) setBgmSrc(bgmSelect.value);
+  })();
+
+})();
+</script>
+</body>
+</html>
