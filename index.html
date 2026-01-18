@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ポモドーロタイマー（瞑想UI寄せ）</title>
+<title>ポモドーロタイマー</title>
 <style>
   :root{
-    /* 瞑想ミニアプリ寄せ（例） */
+    /* テーマ変数（JSから切替） */
     --bg1:#667eea;
     --bg2:#764ba2;
     --card: rgba(255,255,255,.15);
@@ -144,18 +144,9 @@
   }
   button:disabled{ opacity:.55; cursor:not-allowed; }
 
-  <div style="margin-bottom:12px;">
-    <label for="themeSelect">配色</label>
-    <select id="themeSelect">
-      <option value="twilight">瞑想（Twilight）</option>
-      <option value="sunrise">あたたかい（Sunrise）</option>
-      <option value="mint">やさしい（Mint）</option>
-    </select>
-  </div>
-  
   /* 右側設定 */
   label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  select, input[type="number"], input[type="range"]{
+  select, input[type="number"]{
     width:100%;
     padding: 12px 12px;
     border-radius: 12px;
@@ -180,6 +171,15 @@
   .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
 
   .hint{ color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 10px; }
+
+  /* 左下メッセージ：大きめ */
+  .message{
+    font-size: 14px;
+    line-height: 1.75;
+  }
+  @media (max-width: 860px){
+    .message{ font-size: 13.5px; }
+  }
 
   /* 休憩中だけ波紋アニメーション */
   .rippleWrap{
@@ -225,8 +225,23 @@
     background: rgba(0,0,0,.10);
     border: 1px solid rgba(255,255,255,.14);
   }
+
+  /* エラー表示 */
+  .error{
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(0,0,0,.10);
+    color: rgba(255,255,255,.92);
+    font-size: 12px;
+    line-height: 1.55;
+    display:none;
+  }
+  .error.show{ display:block; }
 </style>
 </head>
+
 <body>
   <div class="wrap">
     <!-- Left: Timer -->
@@ -264,10 +279,8 @@
         <button class="warn" id="btnSkip">次へ</button>
       </div>
 
-      <div class="hint">
-        休憩は「回復」なので、サボりではありません。むしろ性能チューニングです。<br/>
-        うまく回らない日でも、開始ボタンを押したあなたは、ちゃんと前に進んでます。
-      </div>
+      <!-- 左下メッセージ（大きく＆ランダム） -->
+      <div class="hint message" id="messageBox"></div>
     </section>
 
     <!-- Right: Settings + BGM -->
@@ -275,8 +288,18 @@
       <div class="header">
         <div>
           <h1>設定 / BGM</h1>
-          <div class="sub">BGMはプルダウンで切替。休憩中に波紋が出ます。</div>
+          <div class="sub">配色は3パターン。BGMはプルダウンで切替。休憩中に波紋が出ます。</div>
         </div>
+      </div>
+
+      <!-- 配色プルダウン（style内に入れない！） -->
+      <div style="margin-bottom:12px;">
+        <label for="themeSelect">配色</label>
+        <select id="themeSelect">
+          <option value="twilight">瞑想（Twilight）</option>
+          <option value="sunrise">あたたかい（Sunrise）</option>
+          <option value="mint">やさしい（Mint）</option>
+        </select>
       </div>
 
       <div class="grid">
@@ -345,6 +368,12 @@
             <button id="btnBgmStop">BGM 停止</button>
           </div>
 
+          <div class="hint" style="margin-top:10px;">
+            注意：ブラウザ仕様で、最初の音出しは「ボタン押下」などユーザー操作が必要です。
+          </div>
+
+          <div class="error" id="bgmError"></div>
+
           <audio id="bgm" preload="none" loop></audio>
         </div>
 
@@ -366,113 +395,170 @@
     return `${pad2(m)}:${pad2(s)}`;
   };
 
-const themeSelect = $("themeSelect");
+  // ---------- Theme ----------
+  const themeSelect = $("themeSelect");
 
-const THEMES = {
-  twilight: {
-    "--bg1": "#667eea",
-    "--bg2": "#764ba2",
-    "--card": "rgba(255,255,255,.15)",
-    "--text": "#ffffff",
-    "--muted": "rgba(255,255,255,.88)",
-    "--accent": "#38bdf8",
-    "--break": "#22c55e",
-    "--start1": "#22c55e",
-    "--start2": "#16a34a",
-    "--stop1": "#6b7280",
-    "--stop2": "#4b5563",
-    "--shadow": "rgba(0,0,0,.30)",
-  },
-  sunrise: {
-    "--bg1": "#fb7185",   // rose
-    "--bg2": "#f59e0b",   // amber
-    "--card": "rgba(255,255,255,.16)",
-    "--text": "#ffffff",
-    "--muted": "rgba(255,255,255,.90)",
-    "--accent": "#60a5fa",
-    "--break": "#34d399",
-    "--start1": "#34d399",
-    "--start2": "#10b981",
-    "--stop1": "#6b7280",
-    "--stop2": "#4b5563",
-    "--shadow": "rgba(0,0,0,.28)",
-  },
-  mint: {
-    "--bg1": "#34d399",   // emerald
-    "--bg2": "#06b6d4",   // cyan
-    "--card": "rgba(255,255,255,.14)",
-    "--text": "#ffffff",
-    "--muted": "rgba(255,255,255,.88)",
-    "--accent": "#a78bfa", // violet
-    "--break": "#22c55e",
-    "--start1": "#22c55e",
-    "--start2": "#16a34a",
-    "--stop1": "#6b7280",
-    "--stop2": "#4b5563",
-    "--shadow": "rgba(0,0,0,.28)",
-  },
-};
+  const THEMES = {
+    twilight: {
+      "--bg1": "#667eea",
+      "--bg2": "#764ba2",
+      "--card": "rgba(255,255,255,.15)",
+      "--text": "#ffffff",
+      "--muted": "rgba(255,255,255,.88)",
+      "--accent": "#38bdf8",
+      "--break": "#22c55e",
+      "--start1": "#22c55e",
+      "--start2": "#16a34a",
+      "--stop1": "#6b7280",
+      "--stop2": "#4b5563",
+      "--shadow": "rgba(0,0,0,.30)",
+    },
+    sunrise: {
+      "--bg1": "#fb7185",
+      "--bg2": "#f59e0b",
+      "--card": "rgba(255,255,255,.16)",
+      "--text": "#ffffff",
+      "--muted": "rgba(255,255,255,.90)",
+      "--accent": "#60a5fa",
+      "--break": "#34d399",
+      "--start1": "#34d399",
+      "--start2": "#10b981",
+      "--stop1": "#6b7280",
+      "--stop2": "#4b5563",
+      "--shadow": "rgba(0,0,0,.28)",
+    },
+    mint: {
+      "--bg1": "#34d399",
+      "--bg2": "#06b6d4",
+      "--card": "rgba(255,255,255,.14)",
+      "--text": "#ffffff",
+      "--muted": "rgba(255,255,255,.88)",
+      "--accent": "#a78bfa",
+      "--break": "#22c55e",
+      "--start1": "#22c55e",
+      "--start2": "#16a34a",
+      "--stop1": "#6b7280",
+      "--stop2": "#4b5563",
+      "--shadow": "rgba(0,0,0,.28)",
+    },
+  };
 
-function applyTheme(key) {
-  const t = THEMES[key] || THEMES.twilight;
-  const root = document.documentElement;
-  for (const [k, v] of Object.entries(t)) root.style.setProperty(k, v);
-  try { localStorage.setItem("pomo_theme", key); } catch(e) {}
-}
+  function applyTheme(key) {
+    const t = THEMES[key] || THEMES.twilight;
+    const root = document.documentElement;
+    for (const [k, v] of Object.entries(t)) root.style.setProperty(k, v);
+    try { localStorage.setItem("pomo_theme", key); } catch(e) {}
+  }
 
-function loadTheme() {
-  let saved = "twilight";
-  try { saved = localStorage.getItem("pomo_theme") || "twilight"; } catch(e) {}
-  if (themeSelect) themeSelect.value = saved;
-  applyTheme(saved);
-}
+  function loadTheme() {
+    let saved = "twilight";
+    try { saved = localStorage.getItem("pomo_theme") || "twilight"; } catch(e) {}
+    if (themeSelect) themeSelect.value = saved;
+    applyTheme(saved);
+  }
 
-if (themeSelect) {
-  themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
-}
+  if (themeSelect) {
+    themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
+  }
 
-  
-  // ---- BGM ----
+  // ---------- Messages ----------
+  const messageBox = $("messageBox");
+  const MESSAGES = [
+    "休憩は「回復」なので、サボりではありません。むしろ性能チューニングです。",
+    "うまく回らない日でも、開始ボタンを押せた時点でちゃんと前に進んでます。",
+    "集中は気合ではなく設計です。次の25分は“実験”にしましょう。",
+    "完璧じゃなくていい。25分だけ前へ。小さく積むほど強い。",
+    "止まっても戻れたらOK。中断は失敗じゃなく、調整です。",
+    "休憩で回復したぶん、次の作業は軽くなります。脳は単純で可愛い。",
+    "今日はスピードより継続。静かに積み上げる日でいきましょう。",
+  ];
+  function setRandomMessage() {
+    if (!messageBox) return;
+    const i = Math.floor(Math.random() * MESSAGES.length);
+    messageBox.textContent = MESSAGES[i];
+  }
+
+  // ---------- BGM ----------
   const bgm = $("bgm");
   const bgmSelect = $("bgmSelect");
   const btnBgmPlay = $("btnBgmPlay");
   const btnBgmStop = $("btnBgmStop");
+  const bgmError = $("bgmError");
 
-  function setBgmSrc(fileName) {
+  function showBgmError(msg) {
+    if (!bgmError) return;
+    bgmError.textContent = msg;
+    bgmError.classList.add("show");
+  }
+  function clearBgmError() {
+    if (!bgmError) return;
+    bgmError.textContent = "";
+    bgmError.classList.remove("show");
+  }
+
+  // fileName -> URL 生成（日本語/記号/空白対策）
+  function buildAudioUrl(fileName) {
+    // encodeURIComponent はパス区切り以外を全部安全にする
+    return "audio/" + encodeURIComponent(fileName);
+  }
+
+  async function setBgmSrc(fileName) {
     bgm.pause();
     bgm.currentTime = 0;
 
-  if (!fileName) {
-    bgm.removeAttribute("src");
+    if (!fileName) {
+      bgm.removeAttribute("src");
+      bgm.load();
+      clearBgmError();
+      return;
+    }
+
+    const url = buildAudioUrl(fileName);
+
+    // ここで存在確認。404なら「再生できない」ではなく「見つからない」を出す。
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) {
+        showBgmError(`BGMファイルが見つかりません（${res.status}）。\n${url}\nGitHubの audio/ に同名ファイルがあるか確認してください。`);
+        return;
+      }
+      clearBgmError();
+    } catch (e) {
+      // fetch が失敗しても src セットは試す
+      showBgmError(`BGMの確認中にエラーが出ました。\n${url}\nそのまま再生を試します。`);
+    }
+
+    bgm.src = url;
     bgm.load();
-    return;
   }
 
-  // GitHub Pages上で日本語ファイル名を確実に扱う
-  const url = "audio/" + encodeURIComponent(fileName);
-  bgm.src = url;
-  bgm.load();
-}
-
-
-
-  bgmSelect.addEventListener("change", () => {
-    setBgmSrc(bgmSelect.value);
+  bgmSelect.addEventListener("change", async () => {
+    await setBgmSrc(bgmSelect.value);
   });
 
   btnBgmPlay.addEventListener("click", async () => {
-    if (!bgm.src && bgmSelect.value) setBgmSrc(bgmSelect.value);
-    try { await bgm.play(); } catch(e) {
-      alert("BGMを再生できませんでした。音源パス（audio/...）が存在するか確認してください。");
+    // 毎回選択値でsrcを作り直す（bgm.src が古いまま問題を潰す）
+    if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
+    try {
+      await bgm.play();
+    } catch (e) {
+      showBgmError(
+        "BGMを再生できませんでした。\n" +
+        "・ブラウザの自動再生制限（必ずボタン押下が必要）\n" +
+        "・ファイルが404\n" +
+        "・対応コーデックでない（mp3は通常OK）\n" +
+        "の可能性があります。"
+      );
     }
   });
 
   btnBgmStop.addEventListener("click", () => {
     bgm.pause();
     bgm.currentTime = 0;
+    clearBgmError();
   });
 
-  // ---- Timer state ----
+  // ---------- Timer state ----------
   const Phase = { WORK:"work", BREAK:"break", LONG_BREAK:"long_break" };
 
   let settings = {
@@ -494,7 +580,7 @@ if (themeSelect) {
     intervalId: null,
   };
 
-  // ---- UI ----
+  // ---------- UI ----------
   const ui = {
     preset: $("preset"),
     sets: $("sets"),
@@ -539,7 +625,6 @@ if (themeSelect) {
   }
 
   function updateRippleUI(){
-    // 休憩中だけ波紋ON
     ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
     ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
 
@@ -633,12 +718,12 @@ if (themeSelect) {
   function onPhaseComplete(){
     stopInterval();
 
-    // 次フェーズへ
+    // フェーズ切替のタイミングでメッセージ更新（毎秒変わらない）
+    setRandomMessage();
+
     if (timer.phase === Phase.WORK){
-      // 作業→休憩
       resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
     } else {
-      // 休憩→作業
       timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
       resetToPhase(Phase.WORK);
     }
@@ -652,7 +737,7 @@ if (themeSelect) {
     onPhaseComplete();
   }
 
-  // ---- Presets ----
+  // ---------- Presets ----------
   function parsePresetValue(v){
     const [w,b,s,l] = v.split("_").map(x => parseInt(x, 10));
     return { workMin:w, breakMin:b, sets:s, longEvery:s, longMin:l };
@@ -691,13 +776,13 @@ if (themeSelect) {
     settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
   }
 
-  // ---- Events ----
+  // ---------- Events ----------
   ui.preset.addEventListener("change", () => applyPreset(ui.preset.value));
 
   ui.btnApply.addEventListener("click", () => {
     readSettingsFromInputs();
     applySettingsToInputs();
-    if (!timer.running) resetAll(); // 停止中なら設定反映して初期化
+    if (!timer.running) resetAll();
   });
 
   ui.btnStart.addEventListener("click", () => startInterval());
@@ -705,13 +790,18 @@ if (themeSelect) {
   ui.btnReset.addEventListener("click", () => resetAll());
   ui.btnSkip.addEventListener("click", () => skipPhase());
 
-  // ---- Init ----
+  // ---------- Init ----------
   (function init(){
     loadTheme();
     applySettingsToInputs();
     resetAll();
     setButtons();
-    // BGM: 初期値が存在する場合に備え
+
+    // 初回メッセージ
+    setRandomMessage();
+
+    // 初期BGM選択の反映（任意）
+    // bgmSelect.value が「なし」以外なら、選択中の曲の存在だけ確認しておく
     if (bgmSelect.value) setBgmSrc(bgmSelect.value);
   })();
 
