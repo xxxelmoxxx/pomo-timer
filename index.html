@@ -241,7 +241,7 @@
 
 /* さらに大きくしたい場合はここを 16px に */
 @media (max-width: 860px){
-  .messageCard{ font-size: 14.5px; }
+  .messageCard{ font-size: 16px; }
 }
 
   /* BGMボタン行：右側に注意文を置く */
@@ -259,27 +259,34 @@
   flex-wrap: wrap;
 }
 
-/* 右上に出す注意文（緑枠のテキストサイズ感を維持） */
-.bgmNoteRight{
-  font-size: 12px;          /* 画像のサイズ感を維持 */
-  line-height: 1.45;
-  color: var(--muted);
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(0,0,0,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  white-space: normal;
-  max-width: 280px;         /* 右側で収まる幅。必要なら調整 */
+/* BGM行を1行にまとめる */
+.bgmRowInline{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
 }
 
-/* 画面が狭い時は下に落とす（崩れ防止） */
+/* ボタン群 */
+.bgmBtns{
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* 右側の注意文（カード化しない・素のテキスト） */
+.bgmNoteInline{
+  font-size: 12px;           /* 今のサイズ感 */
+  line-height: 1.5;
+  color: var(--muted);
+  white-space: normal;       /* 自然改行OK */
+}
+
+/* 画面が狭い時は縦に落とす（保険） */
 @media (max-width: 860px){
-  .bgmTopRow{
-    align-items: stretch;
+  .bgmRowInline{
     flex-direction: column;
-  }
-  .bgmNoteRight{
-    max-width: 100%;
+    align-items: flex-start;
   }
 }
 
@@ -420,13 +427,13 @@
             <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
           </select>
 
-          <div class="bgmTopRow">
+          <div class="bgmRowInline">
             <div class="bgmBtns">
               <button id="btnBgmPlay">BGM 再生</button>
               <button id="btnBgmStop">BGM 停止</button>
             </div>
 
-            <div class="bgmNoteRight">
+            <div class="bgmNoteInline">
               注意：ブラウザ仕様で、最初の音出しは「ボタン押下」などユーザー操作が必要です。
             </div>
           </div>
