@@ -331,13 +331,13 @@
           <label for="bgmSelect">BGM（プルダウン）</label>
           <select id="bgmSelect">
             <option value="">なし</option>
-            <option value="10%C_2.mp3">10°C_2.mp3</option>
+            <option value="10°C_2.mp3">10°C_2.mp3</option>
             <option value="2_23_AM_2.mp3">2_23_AM_2.mp3</option>
             <option value="Chill_Sunset.mp3">Chill_Sunset.mp3</option>
             <option value="You_and_Me_2.mp3">You_and_Me_2.mp3</option>
-            <option value="%E5%84%AA%E3%81%97%E3%81%84%E7%81%AF%E7%81%AB(Tenderly_glow).mp3">優しい灯火(Tenderly_glow).mp3</option>
-            <option value="%E7%A5%9E%E9%9A%A0%E3%81%97%E3%81%AE%E7%9C%9F%E7%9B%B8_2.mp3">神隠しの真相_2.mp3</option>
-            <option value="%E9%87%8E%E8%89%AF%E7%8C%AB%E3%81%AF%E5%AE%87%E5%AE%99%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%97%E3%81%9F_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
+            <option value="優しい灯火(Tenderly_glow).mp3">優しい灯火(Tenderly_glow).mp3</option>
+            <option value="神隠しの真相_2.mp3">神隠しの真相_2.mp3</option>
+            <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
           </select>
 
           <div class="row" style="margin-top:10px;">
@@ -448,10 +448,12 @@ if (themeSelect) {
     return;
   }
 
-  // audio/ 配下として参照。日本語ファイル名対策で encodeURI。
-  const url = encodeURI(`audio/${fileName}`);
+  // GitHub Pages上で日本語ファイル名を確実に扱う
+  const url = "audio/" + encodeURIComponent(fileName);
   bgm.src = url;
-  }
+  bgm.load();
+}
+
 
 
   bgmSelect.addEventListener("change", () => {
