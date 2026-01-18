@@ -226,6 +226,63 @@
     border: 1px solid rgba(255,255,255,.14);
   }
 
+  /* 左下メッセージ：カード化（赤枠） */
+.messageCard{
+  margin-top: 14px;
+  padding: 14px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.20);
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  font-size: 15px;          /* ここで大きく */
+  line-height: 1.8;
+  color: rgba(255,255,255,.95);
+}
+
+/* さらに大きくしたい場合はここを 16px に */
+@media (max-width: 860px){
+  .messageCard{ font-size: 14.5px; }
+}
+
+  /* BGMボタン行：右側に注意文を置く */
+.bgmTopRow{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.bgmBtns{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 右上に出す注意文（緑枠のテキストサイズ感を維持） */
+.bgmNoteRight{
+  font-size: 12px;          /* 画像のサイズ感を維持 */
+  line-height: 1.45;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  white-space: normal;
+  max-width: 280px;         /* 右側で収まる幅。必要なら調整 */
+}
+
+/* 画面が狭い時は下に落とす（崩れ防止） */
+@media (max-width: 860px){
+  .bgmTopRow{
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .bgmNoteRight{
+    max-width: 100%;
+  }
+}
+
   /* エラー表示 */
   .error{
     margin-top: 8px;
@@ -280,7 +337,7 @@
       </div>
 
       <!-- 左下メッセージ（大きく＆ランダム） -->
-      <div class="hint message" id="messageBox"></div>
+      <div class="messageCard" id="messageBox"></div>
     </section>
 
     <!-- Right: Settings + BGM -->
@@ -363,10 +420,13 @@
             <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
           </select>
 
-          <div class="row" style="margin-top:10px;">
-            <button id="btnBgmPlay">BGM 再生</button>
-            <button id="btnBgmStop">BGM 停止</button>
-            <div class="hint" style="margin-top:10px;">
+          <div class="bgmTopRow">
+            <div class="bgmBtns">
+              <button id="btnBgmPlay">BGM 再生</button>
+              <button id="btnBgmStop">BGM 停止</button>
+            </div>
+
+            <div class="bgmNoteRight">
               注意：ブラウザ仕様で、最初の音出しは「ボタン押下」などユーザー操作が必要です。
             </div>
           </div>
