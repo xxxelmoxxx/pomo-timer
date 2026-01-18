@@ -144,6 +144,15 @@
   }
   button:disabled{ opacity:.55; cursor:not-allowed; }
 
+  <div style="margin-bottom:12px;">
+    <label for="themeSelect">配色</label>
+    <select id="themeSelect">
+      <option value="twilight">瞑想（Twilight）</option>
+      <option value="sunrise">あたたかい（Sunrise）</option>
+      <option value="mint">やさしい（Mint）</option>
+    </select>
+  </div>
+  
   /* 右側設定 */
   label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   select, input[type="number"], input[type="range"]{
@@ -225,7 +234,6 @@
       <div class="header">
         <div>
           <h1>ポモドーロタイマー</h1>
-          <div class="sub">瞑想アプリと同じ空気感で、作業と休憩を回す。静かに強い、が正義。</div>
         </div>
         <div class="pill" id="presetLabel">Preset: 25/5</div>
       </div>
@@ -323,26 +331,18 @@
           <label for="bgmSelect">BGM（プルダウン）</label>
           <select id="bgmSelect">
             <option value="">なし</option>
-
-            <!-- 例：URL直指定（著作権や利用規約は自己管理で） -->
-            <!-- <option value="https://example.com/audio.mp3">BGM 1</option> -->
-
-            <!-- 推奨：同リポジトリ内に置いた音源（/audio/xxx.mp3） -->
-            <option value="audio/bgm1.mp3">BGM 1（audio/bgm1.mp3）</option>
-            <option value="audio/bgm2.mp3">BGM 2（audio/bgm2.mp3）</option>
+            <option value="10%C_2.mp3">10°C_2.mp3</option>
+            <option value="2_23_AM_2.mp3">2_23_AM_2.mp3</option>
+            <option value="Chill_Sunset.mp3">Chill_Sunset.mp3</option>
+            <option value="You_and_Me_2.mp3">You_and_Me_2.mp3</option>
+            <option value="%E5%84%AA%E3%81%97%E3%81%84%E7%81%AF%E7%81%AB(Tenderly_glow).mp3">優しい灯火(Tenderly_glow).mp3</option>
+            <option value="%E7%A5%9E%E9%9A%A0%E3%81%97%E3%81%AE%E7%9C%9F%E7%9B%B8_2.mp3">神隠しの真相_2.mp3</option>
+            <option value="%E9%87%8E%E8%89%AF%E7%8C%AB%E3%81%AF%E5%AE%87%E5%AE%99%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%97%E3%81%9F_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
           </select>
 
           <div class="row" style="margin-top:10px;">
             <button id="btnBgmPlay">BGM 再生</button>
             <button id="btnBgmStop">BGM 停止</button>
-          </div>
-
-          <div style="margin-top:10px;">
-            <label for="bgmVol">音量</label>
-            <input id="bgmVol" type="range" min="0" max="1" step="0.01" value="0.35" />
-            <div class="hint" style="margin-top:6px;">
-              注意：ブラウザ仕様で、最初の音出しは「ボタン押下」などユーザー操作が必要です。
-            </div>
           </div>
 
           <audio id="bgm" preload="none" loop></audio>
@@ -371,24 +371,93 @@
     return `${pad2(m)}:${pad2(s)}`;
   };
 
+const themeSelect = $("themeSelect");
+
+const THEMES = {
+  twilight: {
+    "--bg1": "#667eea",
+    "--bg2": "#764ba2",
+    "--card": "rgba(255,255,255,.15)",
+    "--text": "#ffffff",
+    "--muted": "rgba(255,255,255,.88)",
+    "--accent": "#38bdf8",
+    "--break": "#22c55e",
+    "--start1": "#22c55e",
+    "--start2": "#16a34a",
+    "--stop1": "#6b7280",
+    "--stop2": "#4b5563",
+    "--shadow": "rgba(0,0,0,.30)",
+  },
+  sunrise: {
+    "--bg1": "#fb7185",   // rose
+    "--bg2": "#f59e0b",   // amber
+    "--card": "rgba(255,255,255,.16)",
+    "--text": "#ffffff",
+    "--muted": "rgba(255,255,255,.90)",
+    "--accent": "#60a5fa",
+    "--break": "#34d399",
+    "--start1": "#34d399",
+    "--start2": "#10b981",
+    "--stop1": "#6b7280",
+    "--stop2": "#4b5563",
+    "--shadow": "rgba(0,0,0,.28)",
+  },
+  mint: {
+    "--bg1": "#34d399",   // emerald
+    "--bg2": "#06b6d4",   // cyan
+    "--card": "rgba(255,255,255,.14)",
+    "--text": "#ffffff",
+    "--muted": "rgba(255,255,255,.88)",
+    "--accent": "#a78bfa", // violet
+    "--break": "#22c55e",
+    "--start1": "#22c55e",
+    "--start2": "#16a34a",
+    "--stop1": "#6b7280",
+    "--stop2": "#4b5563",
+    "--shadow": "rgba(0,0,0,.28)",
+  },
+};
+
+function applyTheme(key) {
+  const t = THEMES[key] || THEMES.twilight;
+  const root = document.documentElement;
+  for (const [k, v] of Object.entries(t)) root.style.setProperty(k, v);
+  try { localStorage.setItem("pomo_theme", key); } catch(e) {}
+}
+
+function loadTheme() {
+  let saved = "twilight";
+  try { saved = localStorage.getItem("pomo_theme") || "twilight"; } catch(e) {}
+  if (themeSelect) themeSelect.value = saved;
+  applyTheme(saved);
+}
+
+if (themeSelect) {
+  themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
+}
+
+  
   // ---- BGM ----
   const bgm = $("bgm");
   const bgmSelect = $("bgmSelect");
-  const bgmVol = $("bgmVol");
   const btnBgmPlay = $("btnBgmPlay");
   const btnBgmStop = $("btnBgmStop");
 
-  function setBgmSrc(src) {
-    // 同じ曲を選び直した場合に再読み込みしたい時のため
+  function setBgmSrc(fileName) {
     bgm.pause();
     bgm.currentTime = 0;
-    bgm.src = src || "";
+
+  if (!fileName) {
+    bgm.removeAttribute("src");
+    bgm.load();
+    return;
   }
 
-  bgmVol.addEventListener("input", () => {
-    bgm.volume = parseFloat(bgmVol.value || "0.35");
-  });
-  bgm.volume = parseFloat(bgmVol.value || "0.35");
+  // audio/ 配下として参照。日本語ファイル名対策で encodeURI。
+  const url = encodeURI(`audio/${fileName}`);
+  bgm.src = url;
+  }
+
 
   bgmSelect.addEventListener("change", () => {
     setBgmSrc(bgmSelect.value);
@@ -641,6 +710,7 @@
 
   // ---- Init ----
   (function init(){
+    loadTheme();
     applySettingsToInputs();
     resetAll();
     setButtons();
