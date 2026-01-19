@@ -439,6 +439,25 @@ details.panel .inner{ margin-top: 10px; }
           </div>
         </div>
 
+          <!-- フェーズ切替サウンド設定 -->
+<details class="panel">
+  <summary>フェーズ切替サウンド</summary>
+  <div class="inner">        
+<div class="switch" style="display:block;">
+  <div style="font-weight:650; margin-bottom:8px;">フェーズ切替サウンド</div>
+
+  <label for="seSelect">効果音（切替時に1回）</label>
+  <select id="seSelect">
+    <option value="">なし</option>
+    <option value="beep">ピッ（短）</option>
+    <option value="double">ピピ（2回）</option>
+    <option value="ding">ポン（柔らか）</option>
+    <option value="alarm">ピピピ（強め）</option>
+  </select>
+<div class="row" style="margin-top:10px;">
+  <button type="button" id="btnSeTest">音テスト</button>
+</div>
+        
         <!-- BGM -->
     <details class="panel" open>
       <summary>BGM</summary>
@@ -472,25 +491,6 @@ details.panel .inner{ margin-top: 10px; }
           <div class="error" id="bgmError"></div>
 
           <audio id="bgm" preload="none" loop></audio>
-
-          <!-- フェーズ切替サウンド設定 -->
-<details class="panel">
-  <summary>フェーズ切替サウンド</summary>
-  <div class="inner">        
-<div class="switch" style="display:block;">
-  <div style="font-weight:650; margin-bottom:8px;">フェーズ切替サウンド</div>
-
-  <label for="seSelect">効果音（切替時に1回）</label>
-  <select id="seSelect">
-    <option value="">なし</option>
-    <option value="beep">ピッ（短）</option>
-    <option value="double">ピピ（2回）</option>
-    <option value="ding">ポン（柔らか）</option>
-    <option value="alarm">ピピピ（強め）</option>
-  </select>
-<div class="row" style="margin-top:10px;">
-  <button type="button" id="btnSeTest">音テスト</button>
-</div>
 
   <div class="row" style="margin-top:10px;">
     <label style="margin:0;">
