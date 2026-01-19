@@ -6,7 +6,7 @@
 <title>ポモドーロタイマー</title>
 <style>
   :root{
-    /* テーマ変数（JSから切替） */
+    /* テーマ（Twilight固定） */
     --bg1:#667eea;
     --bg2:#764ba2;
     --card: rgba(255,255,255,.15);
@@ -144,41 +144,68 @@
   }
   button:disabled{ opacity:.55; cursor:not-allowed; }
 
-  /* 右側設定 */
-  label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  select, input[type="number"]{
+  /* 右側（コンパクト） */
+  .compact{ padding: 14px; }
+  .compact label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .compact select{
     width:100%;
-    padding: 12px 12px;
-    border-radius: 12px;
+    padding: 10px 10px;
+    border-radius: 10px;
     background: rgba(0,0,0,.18);
     border: 1px solid rgba(255,255,255,.18);
     color: var(--text);
     outline:none;
   }
-
-  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+  .compact button{ padding: 10px 12px; border-radius: 10px; }
+  .compact .hint{ color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 6px; }
 
   .switch{
     display:flex; align-items:center; gap: 10px;
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
     background: rgba(0,0,0,.10);
     border: 1px solid rgba(255,255,255,.16);
   }
-  .switch input{ transform: scale(1.2); }
+  .switch input{ transform: scale(1.15); }
+
+  details.panel{
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(0,0,0,.08);
+    border-radius: 12px;
+    padding: 10px 10px;
+  }
+  details.panel > summary{
+    cursor: pointer;
+    list-style: none;
+    font-weight: 650;
+    color: rgba(255,255,255,.92);
+    outline: none;
+  }
+  details.panel > summary::-webkit-details-marker{ display:none; }
+  details.panel .inner{ margin-top: 10px; display:grid; gap: 10px; }
 
   .row{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; }
+  .row.right{ justify-content:flex-end; }
 
-  .hint{ color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 10px; }
-
-  /* 左下メッセージ：大きめ */
-  .message{
-    font-size: 14px;
-    line-height: 1.75;
+  .bgmRowInline{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .bgmBtns{
+    display:flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .bgmNoteInline{
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+    white-space: normal;
   }
   @media (max-width: 860px){
-    .message{ font-size: 13.5px; }
+    .bgmRowInline{ flex-direction: column; align-items: flex-start; }
   }
 
   /* 休憩中だけ波紋アニメーション */
@@ -190,7 +217,6 @@
     margin-top: 6px;
     height: 140px;
   }
-
   .ripple{
     position:absolute;
     width: 18px;
@@ -200,7 +226,6 @@
     border: 2px solid rgba(34,197,94,.65);
     box-shadow: 0 0 18px rgba(34,197,94,.25);
   }
-
   .rippleOn .ripple{
     opacity: 1;
     animation: ripple 2.6s ease-out infinite;
@@ -226,99 +251,25 @@
     border: 1px solid rgba(255,255,255,.14);
   }
 
-  /* 左下メッセージ：カード化（赤枠） */
-.messageCard{
-  margin-top: 14px;
-  padding: 14px 14px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.20);
-  box-shadow: 0 10px 24px rgba(0,0,0,.12);
-  font-size: 15px;          /* ここで大きく */
-  line-height: 1.8;
-  color: rgba(255,255,255,.95);
-}
-
-/* さらに大きくしたい場合はここを 16px に */
-@media (max-width: 860px){
-  .messageCard{ font-size: 16px; }
-}
-
-  /* BGMボタン行：右側に注意文を置く */
-.bgmTopRow{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.bgmBtns{
-  display:flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* BGM行を1行にまとめる */
-.bgmRowInline{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-/* ボタン群 */
-.bgmBtns{
-  display: flex;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-/* 右側の注意文（カード化しない・素のテキスト） */
-.bgmNoteInline{
-  font-size: 12px;           /* 今のサイズ感 */
-  line-height: 1.5;
-  color: var(--muted);
-  white-space: normal;       /* 自然改行OK */
-}
-
-/* 画面が狭い時は縦に落とす（保険） */
-@media (max-width: 860px){
-  .bgmRowInline{
-    flex-direction: column;
-    align-items: flex-start;
+  /* 左下メッセージ：カード */
+  .messageCard{
+    margin-top: 14px;
+    padding: 14px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.20);
+    box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(255,255,255,.95);
   }
-}
+  @media (max-width: 860px){
+    .messageCard{ font-size: 16px; }
+  }
 
-  /* 右パネルをコンパクトに */
-.compact .card{ padding: 14px; }
-.compact .grid{ gap: 10px; }
-.compact label{ margin-bottom: 4px; }
-.compact select, .compact input[type="number"]{ padding: 10px 10px; border-radius: 10px; }
-.compact .switch{ padding: 10px; border-radius: 12px; }
-.compact .hint{ margin-top: 6px; line-height: 1.5; }
-.compact button{ padding: 10px 12px; border-radius: 10px; }
-
-/* detailsをUIとして馴染ませる */
-details.panel{
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.08);
-  border-radius: 12px;
-  padding: 10px 10px;
-}
-details.panel > summary{
-  cursor: pointer;
-  list-style: none;
-  font-weight: 650;
-  color: rgba(255,255,255,.92);
-  outline: none;
-}
-details.panel > summary::-webkit-details-marker{ display:none; }
-details.panel .inner{ margin-top: 10px; }
-
-  /* エラー表示 */
+  /* エラー */
   .error{
-    margin-top: 8px;
+    margin-top: 6px;
     padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,.18);
@@ -369,153 +320,95 @@ details.panel .inner{ margin-top: 10px; }
         <button class="warn" id="btnSkip">次へ</button>
       </div>
 
-      <!-- 左下メッセージ（大きく＆ランダム） -->
       <div class="messageCard" id="messageBox"></div>
     </section>
 
-    <!-- Right: Settings + BGM -->
-    <section class="card">
+    <!-- Right: Settings (requested 4 items only) -->
+    <section class="card compact">
       <div class="header">
         <div>
           <h1>設定 / BGM</h1>
-          <div class="sub">配色は3パターン。BGMはプルダウンで切替。休憩中に波紋が出ます。</div>
+          <div class="sub">自動切替・切替音・BGMのみ。プリセットは 25/5（4セット）固定です。</div>
         </div>
       </div>
 
-      <!-- 配色プルダウン（style内に入れない！） -->
-      <div style="margin-bottom:12px;">
-        <label for="themeSelect">配色</label>
-        <select id="themeSelect">
-          <option value="twilight">瞑想（Twilight）</option>
-          <option value="sunrise">あたたかい（Sunrise）</option>
-          <option value="mint">やさしい（Mint）</option>
-        </select>
-      </div>
-
-      <div class="grid">
+      <!-- 1) 自動で次フェーズへ -->
+      <div class="switch">
+        <input id="autoNext" type="checkbox" checked />
         <div>
-          <label for="preset">プリセット</label>
-          <select id="preset">
-            <option value="25_5_4_15">標準 25/5（4セットごとに長休憩15）</option>
-            <option value="50_10_2_20">深集中 50/10（2セットごとに長休憩20）</option>
-            <option value="45_15_2_30">しっかり 45/15（2セットごとに長休憩30）</option>
-            <option value="15_5_4_10">入門 15/5（4セットごとに長休憩10）</option>
-            <option value="custom">カスタム</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="sets">1サイクルのセット数</label>
-          <input id="sets" type="number" min="1" max="12" value="4" />
-        </div>
-
-        <div>
-          <label for="workMin">作業（分）</label>
-          <input id="workMin" type="number" min="1" max="180" value="25" />
-        </div>
-
-        <div>
-          <label for="breakMin">休憩（分）</label>
-          <input id="breakMin" type="number" min="1" max="60" value="5" />
-        </div>
-
-        <div>
-          <label for="longEvery">長休憩の頻度（何セットごと）</label>
-          <input id="longEvery" type="number" min="0" max="12" value="4" />
-        </div>
-
-        <div>
-          <label for="longMin">長休憩（分）</label>
-          <input id="longMin" type="number" min="1" max="120" value="15" />
+          <div style="font-weight:650;">自動で次フェーズへ</div>
+          <div class="hint">ONだと、0秒で作業↔休憩を自動切替します。</div>
         </div>
       </div>
 
-      <div style="margin-top:12px; display:grid; gap:10px;">
-        <div class="switch">
-          <input id="autoNext" type="checkbox" checked />
+      <!-- 2) フェーズ切替サウンド -->
+      <details class="panel" open>
+        <summary>フェーズ切替サウンド</summary>
+        <div class="inner">
           <div>
-            <div style="font-weight:650;">自動で次フェーズへ</div>
-            <div class="hint" style="margin:6px 0 0;">ONだと、0秒で作業↔休憩を自動切替</div>
+            <label for="seSelect">効果音（切替時に1回）</label>
+            <select id="seSelect">
+              <option value="">なし</option>
+              <option value="beep">ピッ（短）</option>
+              <option value="double">ピピ（2回）</option>
+              <option value="ding">ポン（柔らか）</option>
+              <option value="alarm">ピピピ（強め）</option>
+            </select>
           </div>
-        </div>
-
-          <!-- フェーズ切替サウンド設定 -->
-<details class="panel">
-  <summary>フェーズ切替サウンド</summary>
-  <div class="inner">        
-<div class="switch" style="display:block;">
-  <div style="font-weight:650; margin-bottom:8px;">フェーズ切替サウンド</div>
-
-  <label for="seSelect">効果音（切替時に1回）</label>
-  <select id="seSelect">
-    <option value="">なし</option>
-    <option value="beep">ピッ（短）</option>
-    <option value="double">ピピ（2回）</option>
-    <option value="ding">ポン（柔らか）</option>
-    <option value="alarm">ピピピ（強め）</option>
-  </select>
-<div class="row" style="margin-top:10px;">
-  <button type="button" id="btnSeTest">音テスト</button>
-</div>
-        
-        <!-- BGM -->
-    <details class="panel" open>
-      <summary>BGM</summary>
-      <div class="inner">
-        <div class="switch" style="display:block;">
-          <label for="bgmSelect">BGM（プルダウン）</label>
-          <select id="bgmSelect">
-            <option value="">なし</option>
-            <option value="10degrees_Celsius_2.mp3">10℃_2.mp3</option>
-            <option value="2_23_AM_2.mp3">2_23_AM_2.mp3</option>
-            <option value="Chill_Sunset.mp3">Chill_Sunset.mp3</option>
-            <option value="You_and_Me_2.mp3">You_and_Me_2.mp3</option>
-            <option value="優しい灯火(Tenderly_glow).mp3">優しい灯火(Tenderly_glow).mp3</option>
-            <option value="神隠しの真相_2.mp3">神隠しの真相_2.mp3</option>
-            <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
-          </select>
+          <div class="row">
+            <button type="button" id="btnSeTest">音テスト</button>
+            <div class="hint">※最初の音出しは、ボタン操作が必要です。</div>
+          </div>
         </div>
       </details>
 
+      <!-- 3) BGM -->
+      <details class="panel" open>
+        <summary>BGM</summary>
+        <div class="inner">
+          <div>
+            <label for="bgmSelect">BGM（プルダウン）</label>
+            <select id="bgmSelect">
+              <option value="">なし</option>
+              <option value="10degrees_Celsius_2.mp3">10℃_2.mp3</option>
+              <option value="2_23_AM_2.mp3">2_23_AM_2.mp3</option>
+              <option value="Chill_Sunset.mp3">Chill_Sunset.mp3</option>
+              <option value="You_and_Me_2.mp3">You_and_Me_2.mp3</option>
+              <option value="優しい灯火(Tenderly_glow).mp3">優しい灯火(Tenderly_glow).mp3</option>
+              <option value="神隠しの真相_2.mp3">神隠しの真相_2.mp3</option>
+              <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
+            </select>
+          </div>
+
           <div class="bgmRowInline">
             <div class="bgmBtns">
-              <button id="btnBgmPlay">BGM 再生</button>
-              <button id="btnBgmStop">BGM 停止</button>
+              <button type="button" id="btnBgmPlay">BGM 再生</button>
+              <button type="button" id="btnBgmStop">BGM 停止</button>
             </div>
-
             <div class="bgmNoteInline">
               注意：ブラウザ仕様で、最初の音出しは「ボタン押下」などユーザー操作が必要です。
             </div>
           </div>
 
+          <div class="row">
+            <label style="margin:0;">
+              <input type="checkbox" id="bgmWorkOn" checked />
+              <span style="margin-left:6px;">作業中はBGMを鳴らす</span>
+            </label>
+            <label style="margin:0;">
+              <input type="checkbox" id="bgmBreakOn" />
+              <span style="margin-left:6px;">休憩中はBGMを鳴らす</span>
+            </label>
+          </div>
+
           <div class="error" id="bgmError"></div>
-
           <audio id="bgm" preload="none" loop></audio>
-
-  <div class="row" style="margin-top:10px;">
-    <label style="margin:0;">
-      <input type="checkbox" id="bgmWorkOn" checked />
-      <span style="margin-left:6px;">作業中はBGMを鳴らす</span>
-    </label>
-
-    <label style="margin:0;">
-      <input type="checkbox" id="bgmBreakOn" />
-      <span style="margin-left:6px;">休憩中はBGMを鳴らす</span>
-    </label>
-  </div>
-
-  <div class="hint" style="margin-top:10px;">
-    ※最初の音出しは、開始/BGM再生などユーザー操作が必要です。
-  </div>
-</div>
-  </div>
-</details>
-          
         </div>
+      </details>
 
-        <div class="row">
-          <button id="btnApply">設定を適用</button>
-        </div>
+      <!-- 4) 設定を適用 -->
+      <div class="row right" style="margin-top:10px;">
+        <button id="btnApply" class="primary" type="button">設定を適用</button>
       </div>
     </section>
   </div>
@@ -523,6 +416,7 @@ details.panel .inner{ margin-top: 10px; }
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
+
   const pad2 = (n) => String(n).padStart(2, "0");
   const fmtMMSS = (sec) => {
     sec = Math.max(0, Math.floor(sec));
@@ -531,73 +425,7 @@ details.panel .inner{ margin-top: 10px; }
     return `${pad2(m)}:${pad2(s)}`;
   };
 
-  // ---------- Theme ----------
-  const themeSelect = $("themeSelect");
-
-  const THEMES = {
-    twilight: {
-      "--bg1": "#667eea",
-      "--bg2": "#764ba2",
-      "--card": "rgba(255,255,255,.15)",
-      "--text": "#ffffff",
-      "--muted": "rgba(255,255,255,.88)",
-      "--accent": "#38bdf8",
-      "--break": "#22c55e",
-      "--start1": "#22c55e",
-      "--start2": "#16a34a",
-      "--stop1": "#6b7280",
-      "--stop2": "#4b5563",
-      "--shadow": "rgba(0,0,0,.30)",
-    },
-    sunrise: {
-      "--bg1": "#fb7185",
-      "--bg2": "#f59e0b",
-      "--card": "rgba(255,255,255,.16)",
-      "--text": "#ffffff",
-      "--muted": "rgba(255,255,255,.90)",
-      "--accent": "#60a5fa",
-      "--break": "#34d399",
-      "--start1": "#34d399",
-      "--start2": "#10b981",
-      "--stop1": "#6b7280",
-      "--stop2": "#4b5563",
-      "--shadow": "rgba(0,0,0,.28)",
-    },
-    mint: {
-      "--bg1": "#34d399",
-      "--bg2": "#06b6d4",
-      "--card": "rgba(255,255,255,.14)",
-      "--text": "#ffffff",
-      "--muted": "rgba(255,255,255,.88)",
-      "--accent": "#a78bfa",
-      "--break": "#22c55e",
-      "--start1": "#22c55e",
-      "--start2": "#16a34a",
-      "--stop1": "#6b7280",
-      "--stop2": "#4b5563",
-      "--shadow": "rgba(0,0,0,.28)",
-    },
-  };
-
-  function applyTheme(key) {
-    const t = THEMES[key] || THEMES.twilight;
-    const root = document.documentElement;
-    for (const [k, v] of Object.entries(t)) root.style.setProperty(k, v);
-    try { localStorage.setItem("pomo_theme", key); } catch(e) {}
-  }
-
-  function loadTheme() {
-    let saved = "twilight";
-    try { saved = localStorage.getItem("pomo_theme") || "twilight"; } catch(e) {}
-    if (themeSelect) themeSelect.value = saved;
-    applyTheme(saved);
-  }
-
-  if (themeSelect) {
-    themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
-  }
-
-  // ---------- Messages ----------
+  // ---------------- Messages ----------------
   const messageBox = $("messageBox");
   const MESSAGES = [
     "休憩は「回復」なので、サボりではありません。むしろ性能チューニングです。",
@@ -614,261 +442,32 @@ details.panel .inner{ margin-top: 10px; }
     messageBox.textContent = MESSAGES[i];
   }
 
-  // ---------- BGM ----------
-  const bgm = $("bgm");
-  const bgmSelect = $("bgmSelect");
-  const btnBgmPlay = $("btnBgmPlay");
-  const btnBgmStop = $("btnBgmStop");
-  const bgmError = $("bgmError");
-
-// ---- SE (効果音): Web Audio（mp3不要） ----
-const seSelect = $("seSelect");
-const btnSeTest = $("btnSeTest");
-if (btnSeTest) {
-  btnSeTest.addEventListener("click", async () => {
-    ensureAudioCtx();           // WebAudioを必ず起こす
-    await playSwitchSE();       // 選択中の音を鳴らす
-  });
-}
-
-// WebAudioはユーザー操作後に解禁されやすいので、最初の「開始」などで準備する
-let audioCtx = null;
-function ensureAudioCtx(){
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!audioCtx) audioCtx = new Ctx();
-
-  // resumeはPromise。失敗しても例外で止めない
-  if (audioCtx.state !== "running") {
-    audioCtx.resume().catch(() => {});
-  }
-}
-
-function playTone({ freq=880, duration=0.12, type="sine", gain=0.08 } = {}){
-  try{
-    ensureAudioCtx();
-    const ctx = audioCtx;
-
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-
-    o.type = type;
-    o.frequency.value = freq;
-
-    // クリックノイズ防止のため短いエンベロープ
-    const now = ctx.currentTime;
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.exponentialRampToValueAtTime(gain, now + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    o.connect(g);
-    g.connect(ctx.destination);
-
-    o.start(now);
-    o.stop(now + duration + 0.02);
-  }catch(e){
-    // 失敗してもUIを壊さない
-  }
-}
-
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-// フェーズ切替時に鳴らす通知音（種類選択）
-async function playSwitchSE(){
-  const mode = seSelect?.value || "";
-  if (!mode) return;
-
-  // 「作業→休憩」「休憩→作業」で少し音色を変えると気持ちいい
-  const isBreak = isBreakPhase();
-
-  if (mode === "beep"){
-    playTone({ freq: isBreak ? 660 : 880, duration: 0.10, type:"sine", gain:0.07 });
-    return;
-  }
-  if (mode === "double"){
-    playTone({ freq: isBreak ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
-    await sleep(120);
-    playTone({ freq: isBreak ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
-    return;
-  }
-  if (mode === "ding"){
-    // 柔らかい「ポン」：triangle + 少し低め
-    playTone({ freq: isBreak ? 523 : 784, duration: 0.14, type:"triangle", gain:0.06 });
-    await sleep(40);
-    playTone({ freq: isBreak ? 659 : 988, duration: 0.08, type:"sine", gain:0.04 });
-    return;
-  }
-  if (mode === "alarm"){
-    // 強め：3連
-    for (let i=0;i<3;i++){
-      playTone({ freq: 990, duration: 0.08, type:"square", gain:0.05 });
-      await sleep(110);
-    }
-    return;
-  }
-}
-
-// BGM自動制御
-const bgmWorkOn = $("bgmWorkOn");
-const bgmBreakOn = $("bgmBreakOn");
-
-// 音声アンロック（初回ユーザー操作で解禁）
-let audioUnlocked = false;
-async function unlockAudioOnce(){
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  try{
-    // 無音再生で解禁（失敗してもOK）
-    bgm.muted = true;
-    await bgm.play();
-    bgm.pause();
-    bgm.currentTime = 0;
-    bgm.muted = false;
-  }catch(e){
-    // 端末/ブラウザによっては失敗するが、次のユーザー操作で鳴ることもある
-  }
-}
-
-function buildAudioUrl(fileName){
-  return "audio/" + encodeURIComponent(fileName);
-}
-
-async function playSwitchSE(){
-  const file = seSelect?.value || "";
-  if (!file) return;
-
-  const url = buildAudioUrl(file);
-  try{
-    se.src = url;
-    se.currentTime = 0;
-    await se.play();
-  }catch(e){
-    // ブラウザ制限 or 404 等。UIを壊さないため黙って無視
-  }
-}
-
-// フェーズに応じてBGMを自動制御
-async function syncBgmForPhase(){
-  const isBreak = isBreakPhase();
-  const shouldPlay = isBreak ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
-
-  if (!bgmSelect.value) return; // BGMが未選択なら何もしない
-
-  if (shouldPlay){
-    try{
-      await setBgmSrc(bgmSelect.value);
-      await bgm.play();
-    }catch(e){
-      // ここも制限で失敗し得る
-    }
-  }else{
-    bgm.pause();
-    bgm.currentTime = 0;
-  }
-}
-
-  function showBgmError(msg) {
-    if (!bgmError) return;
-    bgmError.textContent = msg;
-    bgmError.classList.add("show");
-  }
-  function clearBgmError() {
-    if (!bgmError) return;
-    bgmError.textContent = "";
-    bgmError.classList.remove("show");
-  }
-
-  // fileName -> URL 生成（日本語/記号/空白対策）
-  function buildAudioUrl(fileName) {
-    // encodeURIComponent はパス区切り以外を全部安全にする
-    return "audio/" + encodeURIComponent(fileName);
-  }
-
-  async function setBgmSrc(fileName) {
-    bgm.pause();
-    bgm.currentTime = 0;
-
-    if (!fileName) {
-      bgm.removeAttribute("src");
-      bgm.load();
-      clearBgmError();
-      return;
-    }
-
-    const url = buildAudioUrl(fileName);
-
-    // ここで存在確認。404なら「再生できない」ではなく「見つからない」を出す。
-    try {
-      const res = await fetch(url, { method: "GET" });
-      if (!res.ok) {
-        showBgmError(`BGMファイルが見つかりません（${res.status}）。\n${url}\nGitHubの audio/ に同名ファイルがあるか確認してください。`);
-        return;
-      }
-      clearBgmError();
-    } catch (e) {
-      // fetch が失敗しても src セットは試す
-      showBgmError(`BGMの確認中にエラーが出ました。\n${url}\nそのまま再生を試します。`);
-    }
-
-    bgm.src = url;
-    bgm.load();
-  }
-
-  bgmSelect.addEventListener("change", async () => {
-    await setBgmSrc(bgmSelect.value);
-  });
-
-  btnBgmPlay.addEventListener("click", async () => {
-    await unlockAudioOnce();
-    if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
-    try {
-      await bgm.play();
-    } catch (e) {
-      showBgmError(
-        "BGMを再生できませんでした。\n" +
-        "・ブラウザの自動再生制限（必ずボタン押下が必要）\n" +
-        "・ファイルが404\n" +
-        "・対応コーデックでない（mp3は通常OK）\n" +
-        "の可能性があります。"
-      );
-    }
-  });
-
-  btnBgmStop.addEventListener("click", () => {
-    bgm.pause();
-    bgm.currentTime = 0;
-    clearBgmError();
-  });
-
-  // ---------- Timer state ----------
-  const Phase = { WORK:"work", BREAK:"break", LONG_BREAK:"long_break" };
-
-  let settings = {
+  // ---------------- Settings ----------------
+  // ※右側UIを簡略化したので、時間系は固定（必要なら後で戻せます）
+  const settings = {
     workMin: 25,
     breakMin: 5,
     sets: 4,
-    longEvery: 4,   // 0=なし
+    longEvery: 4,
     longMin: 15,
     autoNext: true,
     presetLabel: "25/5",
   };
 
-  let timer = {
+  // ---------------- Timer state ----------------
+  const Phase = { WORK:"work", BREAK:"break", LONG_BREAK:"long_break" };
+
+  const timer = {
     running: false,
     phase: Phase.WORK,
     setIndex: 1,
-    remainingSec: 25*60,
-    phaseTotalSec: 25*60,
+    remainingSec: settings.workMin * 60,
+    phaseTotalSec: settings.workMin * 60,
     intervalId: null,
   };
 
-  // ---------- UI ----------
+  // ---------------- UI refs ----------------
   const ui = {
-    preset: $("preset"),
-    sets: $("sets"),
-    workMin: $("workMin"),
-    breakMin: $("breakMin"),
-    longEvery: $("longEvery"),
-    longMin: $("longMin"),
     autoNext: $("autoNext"),
     btnApply: $("btnApply"),
 
@@ -889,22 +488,16 @@ async function syncBgmForPhase(){
     rippleText: $("rippleText"),
   };
 
-  function applySettingsToInputs(){
-    ui.sets.value = settings.sets;
-    ui.workMin.value = settings.workMin;
-    ui.breakMin.value = settings.breakMin;
-    ui.longEvery.value = settings.longEvery;
-    ui.longMin.value = settings.longMin;
-    ui.autoNext.checked = settings.autoNext;
-
-    ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
-    ui.setTotal.textContent = String(settings.sets);
-  }
-
+  // ---------------- Phase helpers ----------------
   function isBreakPhase() {
     return timer.phase === Phase.BREAK || timer.phase === Phase.LONG_BREAK;
   }
+  function isLongBreakDue(){
+    if (settings.longEvery <= 0) return false;
+    return (timer.setIndex % settings.longEvery) === 0;
+  }
 
+  // ---------------- Ripple UI ----------------
   function updateRippleUI(){
     ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
     ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
@@ -918,6 +511,7 @@ async function syncBgmForPhase(){
     }
   }
 
+  // ---------------- Phase UI ----------------
   function updatePhaseUI(){
     const breakMode = isBreakPhase();
     ui.phaseDot.classList.toggle("break", breakMode);
@@ -954,24 +548,6 @@ async function syncBgmForPhase(){
     setButtons();
   }
 
-  function startInterval(){
-    if (timer.running) return;
-    timer.running = true;
-    setButtons();
-    timer.intervalId = setInterval(() => {
-      timer.remainingSec -= 1;
-      if (timer.remainingSec <= 0){
-        timer.remainingSec = 0;
-        updatePhaseUI();
-        ensureAudioCtx();
-        await playSwitchSE();
-        await syncBgmForPhase();
-      } else {
-        updatePhaseUI();
-      }
-    }, 1000);
-  }
-
   function resetToPhase(phase){
     timer.phase = phase;
     if (phase === Phase.WORK){
@@ -993,31 +569,228 @@ async function syncBgmForPhase(){
     resetToPhase(Phase.WORK);
   }
 
-  function isLongBreakDue(){
-    if (settings.longEvery <= 0) return false;
-    return (timer.setIndex % settings.longEvery) === 0;
+  // ---------------- WebAudio SE (system sound) ----------------
+  const seSelect = $("seSelect");
+  const btnSeTest = $("btnSeTest");
+  let audioCtx = null;
+
+  function ensureAudioCtx(){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state !== "running") audioCtx.resume().catch(() => {});
   }
 
-async function onPhaseComplete(){
-  stopInterval();
+  function playTone({ freq=880, duration=0.12, type="sine", gain=0.08 } = {}){
+    try{
+      ensureAudioCtx();
+      const ctx = audioCtx;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
 
-  // フェーズ切替のタイミングでメッセージ更新
-  setRandomMessage();
+      o.type = type;
+      o.frequency.value = freq;
 
-  // 次フェーズへ
-  if (timer.phase === Phase.WORK){
-    resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
-  } else {
-    timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
-    resetToPhase(Phase.WORK);
+      const now = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      o.connect(g);
+      g.connect(ctx.destination);
+
+      o.start(now);
+      o.stop(now + duration + 0.02);
+    }catch(e){}
   }
 
-  // ここが「切替タイミング」：通知音＋BGM自動制御
-  await playSwitchSE();
-  await syncBgmForPhase();
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-  if (settings.autoNext) startInterval();
-}
+  async function playSwitchSE(){
+    const mode = seSelect?.value || "";
+    if (!mode) return;
+
+    const goingToBreak = isBreakPhase(); // 既に次フェーズへ移ってから呼ばれる想定
+    if (mode === "beep"){
+      playTone({ freq: goingToBreak ? 660 : 880, duration: 0.10, type:"sine", gain:0.07 });
+      return;
+    }
+    if (mode === "double"){
+      playTone({ freq: goingToBreak ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
+      await sleep(120);
+      playTone({ freq: goingToBreak ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
+      return;
+    }
+    if (mode === "ding"){
+      playTone({ freq: goingToBreak ? 523 : 784, duration: 0.14, type:"triangle", gain:0.06 });
+      await sleep(40);
+      playTone({ freq: goingToBreak ? 659 : 988, duration: 0.08, type:"sine", gain:0.04 });
+      return;
+    }
+    if (mode === "alarm"){
+      for (let i=0;i<3;i++){
+        playTone({ freq: 990, duration: 0.08, type:"square", gain:0.05 });
+        await sleep(110);
+      }
+      return;
+    }
+  }
+
+  if (btnSeTest){
+    btnSeTest.addEventListener("click", async () => {
+      ensureAudioCtx();
+      // 「テスト」は“今のフェーズ”で鳴らす
+      await playSwitchSE();
+    });
+  }
+
+  // ---------------- BGM ----------------
+  const bgm = $("bgm");
+  const bgmSelect = $("bgmSelect");
+  const btnBgmPlay = $("btnBgmPlay");
+  const btnBgmStop = $("btnBgmStop");
+  const bgmError = $("bgmError");
+  const bgmWorkOn = $("bgmWorkOn");
+  const bgmBreakOn = $("bgmBreakOn");
+
+  function showBgmError(msg) {
+    if (!bgmError) return;
+    bgmError.textContent = msg;
+    bgmError.classList.add("show");
+  }
+  function clearBgmError() {
+    if (!bgmError) return;
+    bgmError.textContent = "";
+    bgmError.classList.remove("show");
+  }
+
+  function buildAudioUrl(fileName){
+    return "audio/" + encodeURIComponent(fileName);
+  }
+
+  async function setBgmSrc(fileName) {
+    bgm.pause();
+    bgm.currentTime = 0;
+
+    if (!fileName) {
+      bgm.removeAttribute("src");
+      bgm.load();
+      clearBgmError();
+      return;
+    }
+
+    const url = buildAudioUrl(fileName);
+
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) {
+        showBgmError(`BGMファイルが見つかりません（${res.status}）。\n${url}\naudio/ に同名ファイルがあるか確認してください。`);
+        return;
+      }
+      clearBgmError();
+    } catch (e) {
+      showBgmError(`BGMの確認中にエラー。\n${url}\nそのまま再生を試します。`);
+    }
+
+    bgm.src = url;
+    bgm.load();
+  }
+
+  let audioUnlocked = false;
+  async function unlockAudioOnce(){
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try{
+      bgm.muted = true;
+      await bgm.play();
+      bgm.pause();
+      bgm.currentTime = 0;
+      bgm.muted = false;
+    }catch(e){}
+  }
+
+  async function syncBgmForPhase(){
+    const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+
+    if (!bgmSelect?.value) {
+      bgm.pause();
+      bgm.currentTime = 0;
+      return;
+    }
+
+    if (shouldPlay){
+      try{
+        await setBgmSrc(bgmSelect.value);
+        await bgm.play();
+      }catch(e){}
+    }else{
+      bgm.pause();
+      bgm.currentTime = 0;
+    }
+  }
+
+  if (bgmSelect){
+    bgmSelect.addEventListener("change", async () => {
+      await setBgmSrc(bgmSelect.value);
+    });
+  }
+
+  if (btnBgmPlay){
+    btnBgmPlay.addEventListener("click", async () => {
+      await unlockAudioOnce();
+      if (bgmSelect?.value) await setBgmSrc(bgmSelect.value);
+      try { await bgm.play(); } catch(e){
+        showBgmError("BGMを再生できませんでした。最初の音出しはボタン操作が必要です。");
+      }
+    });
+  }
+
+  if (btnBgmStop){
+    btnBgmStop.addEventListener("click", () => {
+      bgm.pause();
+      bgm.currentTime = 0;
+      clearBgmError();
+    });
+  }
+
+  // ---------------- Phase transition ----------------
+  async function onPhaseComplete(){
+    stopInterval();
+
+    // メッセージ更新（切替時のみ）
+    setRandomMessage();
+
+    // 次フェーズへ
+    if (timer.phase === Phase.WORK){
+      resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+    } else {
+      timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+      resetToPhase(Phase.WORK);
+    }
+
+    // ここが「切替タイミング」：通知音（WebAudio）＋BGM自動制御
+    await playSwitchSE();
+    await syncBgmForPhase();
+
+    if (settings.autoNext) startInterval();
+  }
+
+  function startInterval(){
+    if (timer.running) return;
+    timer.running = true;
+    setButtons();
+
+    timer.intervalId = setInterval(() => {
+      timer.remainingSec -= 1;
+      if (timer.remainingSec <= 0){
+        timer.remainingSec = 0;
+        updatePhaseUI();
+        // ここからは async にしたいので setInterval 内では直接 await しない
+        onPhaseComplete();
+      } else {
+        updatePhaseUI();
+      }
+    }, 1000);
+  }
 
   function skipPhase(){
     timer.remainingSec = 0;
@@ -1025,79 +798,53 @@ async function onPhaseComplete(){
     onPhaseComplete();
   }
 
-  // ---------- Presets ----------
-  function parsePresetValue(v){
-    const [w,b,s,l] = v.split("_").map(x => parseInt(x, 10));
-    return { workMin:w, breakMin:b, sets:s, longEvery:s, longMin:l };
+  // ---------------- Apply button ----------------
+  function applyRightPanelSettings(){
+    settings.autoNext = !!ui.autoNext?.checked;
+    ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
+    ui.setTotal.textContent = String(settings.sets);
+
+    // 停止中は「いまのフェーズ」に合わせてBGMを同期（チェックONなら鳴る）
+    // ただしBGM再生は制限があるので、未解禁なら勝手には鳴らない（仕様）
+    syncBgmForPhase();
   }
 
-  function applyPreset(value){
-    if (value === "custom"){
-      settings.presetLabel = "Custom";
-      ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
-      return;
-    }
-    const p = parsePresetValue(value);
-    settings.workMin = p.workMin;
-    settings.breakMin = p.breakMin;
-    settings.sets = p.sets;
-    settings.longEvery = p.longEvery;
-    settings.longMin = p.longMin;
-    settings.presetLabel = `${p.workMin}/${p.breakMin}`;
-    applySettingsToInputs();
+  if (ui.btnApply){
+    ui.btnApply.addEventListener("click", () => {
+      applyRightPanelSettings();
+    });
   }
 
-  function readSettingsFromInputs(){
-    const workMin = Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25));
-    const breakMin = Math.max(1, Math.min(60, parseInt(ui.breakMin.value,10) || 5));
-    const sets = Math.max(1, Math.min(12, parseInt(ui.sets.value,10) || 4));
-    const longEvery = Math.max(0, Math.min(12, parseInt(ui.longEvery.value,10) || 0));
-    const longMin = Math.max(1, Math.min(120, parseInt(ui.longMin.value,10) || 15));
+  // ---------------- Buttons ----------------
+  ui.btnStart.addEventListener("click", async () => {
+    // 音を確実に出すため、ユーザー操作時にWebAudio/BGMを起こす
+    ensureAudioCtx();
+    await unlockAudioOnce();
 
-    settings.workMin = workMin;
-    settings.breakMin = breakMin;
-    settings.sets = sets;
-    settings.longEvery = longEvery;
-    settings.longMin = longMin;
-    settings.autoNext = ui.autoNext.checked;
-
-    settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
-  }
-
-  // ---------- Events ----------
-  ui.preset.addEventListener("change", () => applyPreset(ui.preset.value));
-
-  ui.btnApply.addEventListener("click", () => {
-    readSettingsFromInputs();
-    applySettingsToInputs();
-    if (!timer.running) resetAll();
+    applyRightPanelSettings();
+    startInterval();
   });
-
-ui.btnStart.addEventListener("click", async () => {
-  ensureAudioCtx();          // 追加：WebAudio準備
-  await unlockAudioOnce();   // BGM側の制限対策
-  startInterval();
-});
 
   ui.btnPause.addEventListener("click", () => stopInterval());
   ui.btnReset.addEventListener("click", () => resetAll());
   ui.btnSkip.addEventListener("click", () => skipPhase());
 
-  // ---------- Init ----------
+  // ---------------- Init ----------------
   (function init(){
-    loadTheme();
-    applySettingsToInputs();
+    // 左上表示
+    ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
+    ui.setTotal.textContent = String(settings.sets);
+
+    // 初期メッセージ
+    setRandomMessage();
+
+    // 初期化
     resetAll();
     setButtons();
 
-    // 初回メッセージ
-    setRandomMessage();
-
-    // 初期BGM選択の反映（任意）
-    // bgmSelect.value が「なし」以外なら、選択中の曲の存在だけ確認しておく
-    if (bgmSelect.value) setBgmSrc(bgmSelect.value);
+    // 初期BGMは選択だけ反映（再生はしない）
+    if (bgmSelect?.value) setBgmSrc(bgmSelect.value);
   })();
-
 })();
 </script>
 </body>
