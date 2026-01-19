@@ -257,7 +257,7 @@
     white-space: normal;
   }
 
-  /* 右パネルをコンパクトに（class compact を section に付けた場合に効く） */
+  /* 右パネルをコンパクトに */
   .compact{ padding: 14px; }
   .compact .grid{ gap: 10px; }
   .compact label{ margin-bottom: 4px; }
@@ -389,7 +389,7 @@
           </div>
         </div>
 
-        <!-- フェーズ切替サウンド（ON/OFF + 種類 + テスト） -->
+        <!-- フェーズ切替サウンド（注意文言はここに統合） -->
         <details class="panel" open>
           <summary>フェーズ切替サウンド</summary>
           <div class="inner">
@@ -412,12 +412,12 @@
             </div>
 
             <div class="hint" style="margin-top:10px;">
-              ※最初の音出しは「開始」などユーザー操作が必要です。
+              注意：ブラウザ仕様で、最初の音出しは「開始」などユーザー操作が必要です。
             </div>
           </div>
         </details>
 
-        <!-- BGM（プルダウン変更で自動再生：ボタン無し） -->
+        <!-- BGM（プルダウン変更で自動再生に寄せつつ、再生/停止ボタンも用意） -->
         <details class="panel" open>
           <summary>BGM</summary>
           <div class="inner">
@@ -436,6 +436,11 @@
             </div>
 
             <div class="row" style="margin-top:10px;">
+              <button type="button" id="btnBgmPlay">BGM 再生</button>
+              <button type="button" id="btnBgmStop">BGM 停止</button>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
               <label style="margin:0;">
                 <input type="checkbox" id="bgmWorkOn" checked />
                 <span style="margin-left:6px;">作業中はBGMを鳴らす</span>
@@ -445,10 +450,6 @@
                 <input type="checkbox" id="bgmBreakOn" />
                 <span style="margin-left:6px;">休憩中はBGMを鳴らす</span>
               </label>
-            </div>
-
-            <div class="bgmNoteInline" style="margin-top:10px;">
-              注意：ブラウザ仕様で、最初の音出しは「開始」などユーザー操作が必要です。
             </div>
 
             <div class="error" id="bgmError"></div>
@@ -536,9 +537,7 @@
     applyTheme(saved);
   }
 
-  if (themeSelect) {
-    themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
-  }
+  if (themeSelect) themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
 
   // ---------- Messages ----------
   const messageBox = $("messageBox");
@@ -579,6 +578,10 @@
     intervalId: null,
   };
 
+  function isBreakPhase() {
+    return timer.phase === Phase.BREAK || timer.phase === Phase.LONG_BREAK;
+  }
+
   // ---------- UI ----------
   const ui = {
     preset: $("preset"),
@@ -607,8 +610,16 @@
     rippleText: $("rippleText"),
   };
 
-  function isBreakPhase() {
-    return timer.phase === Phase.BREAK || timer.phase === Phase.LONG_BREAK;
+  function applySettingsToInputs(){
+    ui.sets.value = settings.sets;
+    ui.workMin.value = settings.workMin;
+    ui.breakMin.value = settings.breakMin;
+    ui.longEvery.value = settings.longEvery;
+    ui.longMin.value = settings.longMin;
+    ui.autoNext.checked = settings.autoNext;
+
+    ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
+    ui.setTotal.textContent = String(settings.sets);
   }
 
   // ---------- SE (WebAudio) ----------
@@ -695,6 +706,8 @@
   const bgmError = $("bgmError");
   const bgmWorkOn = $("bgmWorkOn");
   const bgmBreakOn = $("bgmBreakOn");
+  const btnBgmPlay = $("btnBgmPlay");
+  const btnBgmStop = $("btnBgmStop");
 
   function showBgmError(msg) {
     if (!bgmError) return;
@@ -724,7 +737,6 @@
 
     const url = buildAudioUrl(fileName);
 
-    // 存在確認（GitHub Pages/静的ホスティング前提）
     try{
       const res = await fetch(url, { method:"GET" });
       if (!res.ok){
@@ -745,74 +757,76 @@
     if (audioUnlocked) return;
     audioUnlocked = true;
     try{
-      // “ユーザー操作直後”に呼ばれることが重要
       bgm.muted = true;
       await bgm.play();
       bgm.pause();
       bgm.currentTime = 0;
       bgm.muted = false;
     }catch(e){
-      // noop（環境により失敗あり）
+      // noop
     }
   }
 
-  async function tryPlayBgm(){
+  async function playBgmNow(){
     if (!bgmSelect.value) return;
-    const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
-    if (!shouldPlay) return;
-
     try{
       await bgm.play();
       clearBgmError();
     }catch(e){
       showBgmError(
-        "BGMを自動再生できませんでした。\n" +
+        "BGMを再生できませんでした。\n" +
         "ブラウザの自動再生制限により、最初は「開始」などの操作が必要です。"
       );
     }
   }
 
+  function stopBgmNow(){
+    bgm.pause();
+    bgm.currentTime = 0;
+  }
+
   async function syncBgmForPhase(){
     if (!bgmSelect.value){
-      bgm.pause();
-      bgm.currentTime = 0;
+      stopBgmNow();
       return;
     }
     const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+
     if (shouldPlay){
       await setBgmSrc(bgmSelect.value);
-      await tryPlayBgm();
+      await playBgmNow();
     }else{
-      bgm.pause();
-      bgm.currentTime = 0;
+      stopBgmNow();
     }
   }
 
   // プルダウン変更で「自動再生に寄せる」
   if (bgmSelect){
     bgmSelect.addEventListener("change", async () => {
-      // 変更操作自体がユーザー操作なので、ここでアンロックも試す
       await unlockAudioOnce();
       await setBgmSrc(bgmSelect.value);
-      await syncBgmForPhase(); // フェーズ/チェックに沿って鳴らす or 止める
+      await syncBgmForPhase();
     });
   }
   if (bgmWorkOn) bgmWorkOn.addEventListener("change", () => syncBgmForPhase());
   if (bgmBreakOn) bgmBreakOn.addEventListener("change", () => syncBgmForPhase());
 
-  // ---------- UI updates ----------
-  function applySettingsToInputs(){
-    ui.sets.value = settings.sets;
-    ui.workMin.value = settings.workMin;
-    ui.breakMin.value = settings.breakMin;
-    ui.longEvery.value = settings.longEvery;
-    ui.longMin.value = settings.longMin;
-    ui.autoNext.checked = settings.autoNext;
-
-    ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
-    ui.setTotal.textContent = String(settings.sets);
+  // BGMボタン（復活）
+  if (btnBgmPlay){
+    btnBgmPlay.addEventListener("click", async () => {
+      await unlockAudioOnce();
+      if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
+      await playBgmNow();
+    });
+  }
+  if (btnBgmStop){
+    btnBgmStop.addEventListener("click", () => {
+      stopBgmNow();
+      clearBgmError();
+    });
   }
 
+  // ---------- UI updates ----------
   function updateRippleUI(){
     ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
     ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
@@ -872,7 +886,7 @@
       if (timer.remainingSec <= 0){
         timer.remainingSec = 0;
         updatePhaseUI();
-        await onPhaseComplete(); // 切替・通知音・BGM同期
+        await onPhaseComplete();
       } else {
         updatePhaseUI();
       }
@@ -908,10 +922,8 @@
   async function onPhaseComplete(){
     stopInterval();
 
-    // メッセージ更新
     setRandomMessage();
 
-    // 次フェーズへ
     if (timer.phase === Phase.WORK){
       resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
     } else {
@@ -919,7 +931,6 @@
       resetToPhase(Phase.WORK);
     }
 
-    // 切替タイミング：SE→BGM
     ensureAudioCtx();
     await playSwitchSE();
     await syncBgmForPhase();
@@ -981,13 +992,13 @@
     readSettingsFromInputs();
     applySettingsToInputs();
     if (!timer.running) resetAll();
-    await syncBgmForPhase(); // 設定反映後にBGM整合
+    await syncBgmForPhase();
   });
 
   ui.btnStart.addEventListener("click", async () => {
     ensureAudioCtx();
     await unlockAudioOnce();
-    await syncBgmForPhase(); // 開始時点のフェーズに合わせてBGM
+    await syncBgmForPhase();
     startInterval();
   });
 
@@ -1002,8 +1013,6 @@
     resetAll();
     setButtons();
     setRandomMessage();
-
-    // 初期BGM選択があれば存在確認だけしておく（鳴らさない）
     if (bgmSelect?.value) setBgmSrc(bgmSelect.value);
   })();
 
