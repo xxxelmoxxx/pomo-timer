@@ -290,6 +290,32 @@
   }
 }
 
+  /* 右パネルをコンパクトに */
+.compact .card{ padding: 14px; }
+.compact .grid{ gap: 10px; }
+.compact label{ margin-bottom: 4px; }
+.compact select, .compact input[type="number"]{ padding: 10px 10px; border-radius: 10px; }
+.compact .switch{ padding: 10px; border-radius: 12px; }
+.compact .hint{ margin-top: 6px; line-height: 1.5; }
+.compact button{ padding: 10px 12px; border-radius: 10px; }
+
+/* detailsをUIとして馴染ませる */
+details.panel{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 10px 10px;
+}
+details.panel > summary{
+  cursor: pointer;
+  list-style: none;
+  font-weight: 650;
+  color: rgba(255,255,255,.92);
+  outline: none;
+}
+details.panel > summary::-webkit-details-marker{ display:none; }
+details.panel .inner{ margin-top: 10px; }
+
   /* エラー表示 */
   .error{
     margin-top: 8px;
@@ -309,7 +335,7 @@
 <body>
   <div class="wrap">
     <!-- Left: Timer -->
-    <section class="card">
+    <section class="card compact">
       <div class="header">
         <div>
           <h1>ポモドーロタイマー</h1>
@@ -414,6 +440,9 @@
         </div>
 
         <!-- BGM -->
+    <details class="panel" open>
+      <summary>BGM</summary>
+      <div class="inner">
         <div class="switch" style="display:block;">
           <label for="bgmSelect">BGM（プルダウン）</label>
           <select id="bgmSelect">
@@ -426,6 +455,8 @@
             <option value="神隠しの真相_2.mp3">神隠しの真相_2.mp3</option>
             <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
           </select>
+        </div>
+      </details>
 
           <div class="bgmRowInline">
             <div class="bgmBtns">
@@ -443,6 +474,9 @@
           <audio id="bgm" preload="none" loop></audio>
 
           <!-- フェーズ切替サウンド設定 -->
+<details class="panel">
+  <summary>フェーズ切替サウンド</summary>
+  <div class="inner">        
 <div class="switch" style="display:block;">
   <div style="font-weight:650; margin-bottom:8px;">フェーズ切替サウンド</div>
 
@@ -454,7 +488,9 @@
     <option value="ding">ポン（柔らか）</option>
     <option value="alarm">ピピピ（強め）</option>
   </select>
-
+<div class="row" style="margin-top:10px;">
+  <button type="button" id="btnSeTest">音テスト</button>
+</div>
 
   <div class="row" style="margin-top:10px;">
     <label style="margin:0;">
@@ -472,7 +508,8 @@
     ※最初の音出しは、開始/BGM再生などユーザー操作が必要です。
   </div>
 </div>
-
+  </div>
+</details>
           
         </div>
 
@@ -586,16 +623,22 @@
 
 // ---- SE (効果音): Web Audio（mp3不要） ----
 const seSelect = $("seSelect");
+const btnSeTest = $("btnSeTest");
+if (btnSeTest) {
+  btnSeTest.addEventListener("click", async () => {
+    ensureAudioCtx();           // WebAudioを必ず起こす
+    await playSwitchSE();       // 選択中の音を鳴らす
+  });
+}
 
 // WebAudioはユーザー操作後に解禁されやすいので、最初の「開始」などで準備する
 let audioCtx = null;
 function ensureAudioCtx(){
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new Ctx();
-  }
-  // iOS等でsuspendされている場合がある
-  if (audioCtx.state === "suspended") {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!audioCtx) audioCtx = new Ctx();
+
+  // resumeはPromise。失敗しても例外で止めない
+  if (audioCtx.state !== "running") {
     audioCtx.resume().catch(() => {});
   }
 }
@@ -920,7 +963,9 @@ async function syncBgmForPhase(){
       if (timer.remainingSec <= 0){
         timer.remainingSec = 0;
         updatePhaseUI();
-        onPhaseComplete();
+        ensureAudioCtx();
+        await playSwitchSE();
+        await syncBgmForPhase();
       } else {
         updatePhaseUI();
       }
