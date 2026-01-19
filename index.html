@@ -702,12 +702,27 @@
 
   // ---------- BGM ----------
   const bgm = $("bgm");
+  // デフォルト音量（0.0〜1.0）
+  bgm.volume = 0.2;
+
   const bgmSelect = $("bgmSelect");
   const bgmError = $("bgmError");
   const bgmWorkOn = $("bgmWorkOn");
   const bgmBreakOn = $("bgmBreakOn");
   const btnBgmPlay = $("btnBgmPlay");
   const btnBgmStop = $("btnBgmStop");
+
+if (bgm) {
+  bgm.addEventListener("error", () => {
+    const code = bgm.error?.code;
+    showBgmError(
+      "BGMの読み込み/再生に失敗しました。\n" +
+      `url: ${bgm.currentSrc || bgm.src}\n` +
+      `errorCode: ${code || "unknown"}\n` +
+      "audio/フォルダの配置、ファイル名、配信環境（file://直開き等）を確認してください。"
+    );
+  });
+}
 
   function showBgmError(msg) {
     if (!bgmError) return;
@@ -724,48 +739,44 @@
     return "audio/" + encodeURIComponent(fileName);
   }
 
-  async function setBgmSrc(fileName) {
+async function setBgmSrc(fileName) {
+  bgm.pause();
+  bgm.currentTime = 0;
+
+  if (!fileName) {
+    bgm.removeAttribute("src");
+    bgm.load();
+    clearBgmError();
+    return;
+  }
+
+  const url = buildAudioUrl(fileName);
+
+  // ★fetch確認はやめて、srcを直接セット
+  clearBgmError();
+  bgm.src = url;
+  bgm.load();
+}
+
+let audioUnlocked = false;
+async function unlockAudioOnce(){
+  if (audioUnlocked) return;
+  try{
+    // srcが無いと play() は失敗しがちなので、無音の短い試行だけ行う
+    bgm.muted = true;
+    const p = bgm.play();
+    if (p && typeof p.then === "function") await p;
     bgm.pause();
     bgm.currentTime = 0;
+    bgm.muted = false;
 
-    if (!fileName) {
-      bgm.removeAttribute("src");
-      bgm.load();
-      clearBgmError();
-      return;
-    }
-
-    const url = buildAudioUrl(fileName);
-
-    try{
-      const res = await fetch(url, { method:"GET" });
-      if (!res.ok){
-        showBgmError(`BGMファイルが見つかりません（${res.status}）。\n${url}\nGitHubの audio/ に同名ファイルがあるか確認してください。`);
-        return;
-      }
-      clearBgmError();
-    }catch(e){
-      showBgmError(`BGMの確認中にエラーが出ました。\n${url}\nそのまま再生を試します。`);
-    }
-
-    bgm.src = url;
-    bgm.load();
+    audioUnlocked = true; // ★成功したらここでtrue
+  }catch(e){
+    // 失敗したら unlocked にしない（次のユーザー操作で再挑戦できる）
+    bgm.muted = false;
+    audioUnlocked = false;
   }
-
-  let audioUnlocked = false;
-  async function unlockAudioOnce(){
-    if (audioUnlocked) return;
-    audioUnlocked = true;
-    try{
-      bgm.muted = true;
-      await bgm.play();
-      bgm.pause();
-      bgm.currentTime = 0;
-      bgm.muted = false;
-    }catch(e){
-      // noop
-    }
-  }
+}
 
   async function playBgmNow(){
     if (!bgmSelect.value) return;
@@ -785,20 +796,26 @@
     bgm.currentTime = 0;
   }
 
-  async function syncBgmForPhase(){
-    if (!bgmSelect.value){
-      stopBgmNow();
-      return;
-    }
-    const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
-
-    if (shouldPlay){
-      await setBgmSrc(bgmSelect.value);
-      await playBgmNow();
-    }else{
-      stopBgmNow();
-    }
+async function syncBgmForPhase(){
+  if (!bgmSelect.value){
+    stopBgmNow();
+    return;
   }
+  const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+
+  if (!shouldPlay){
+    stopBgmNow();
+    return;
+  }
+
+  // srcが違う時だけ張り替える
+const nextUrl = buildAudioUrl(bgmSelect.value);
+const nextAbs = new URL(nextUrl, location.href).href;
+const curAbs = bgm.currentSrc || bgm.src || "";
+if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
+
+  await playBgmNow();
+}
 
   // プルダウン変更で「自動再生に寄せる」
   if (bgmSelect){
