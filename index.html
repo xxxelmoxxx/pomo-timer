@@ -441,6 +441,39 @@
           <div class="error" id="bgmError"></div>
 
           <audio id="bgm" preload="none" loop></audio>
+
+          <!-- フェーズ切替サウンド設定 -->
+<div class="switch" style="display:block;">
+  <div style="font-weight:650; margin-bottom:8px;">フェーズ切替サウンド</div>
+
+  <label for="seSelect">効果音（切替時に1回）</label>
+  <select id="seSelect">
+    <option value="">なし</option>
+    <option value="beep">ピッ（短）</option>
+    <option value="double">ピピ（2回）</option>
+    <option value="ding">ポン（柔らか）</option>
+    <option value="alarm">ピピピ（強め）</option>
+  </select>
+
+
+  <div class="row" style="margin-top:10px;">
+    <label style="margin:0;">
+      <input type="checkbox" id="bgmWorkOn" checked />
+      <span style="margin-left:6px;">作業中はBGMを鳴らす</span>
+    </label>
+
+    <label style="margin:0;">
+      <input type="checkbox" id="bgmBreakOn" />
+      <span style="margin-left:6px;">休憩中はBGMを鳴らす</span>
+    </label>
+  </div>
+
+  <div class="hint" style="margin-top:10px;">
+    ※最初の音出しは、開始/BGM再生などユーザー操作が必要です。
+  </div>
+</div>
+
+          
         </div>
 
         <div class="row">
@@ -551,6 +584,145 @@
   const btnBgmStop = $("btnBgmStop");
   const bgmError = $("bgmError");
 
+// ---- SE (効果音): Web Audio（mp3不要） ----
+const seSelect = $("seSelect");
+
+// WebAudioはユーザー操作後に解禁されやすいので、最初の「開始」などで準備する
+let audioCtx = null;
+function ensureAudioCtx(){
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
+  }
+  // iOS等でsuspendされている場合がある
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
+}
+
+function playTone({ freq=880, duration=0.12, type="sine", gain=0.08 } = {}){
+  try{
+    ensureAudioCtx();
+    const ctx = audioCtx;
+
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+
+    o.type = type;
+    o.frequency.value = freq;
+
+    // クリックノイズ防止のため短いエンベロープ
+    const now = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    o.connect(g);
+    g.connect(ctx.destination);
+
+    o.start(now);
+    o.stop(now + duration + 0.02);
+  }catch(e){
+    // 失敗してもUIを壊さない
+  }
+}
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+// フェーズ切替時に鳴らす通知音（種類選択）
+async function playSwitchSE(){
+  const mode = seSelect?.value || "";
+  if (!mode) return;
+
+  // 「作業→休憩」「休憩→作業」で少し音色を変えると気持ちいい
+  const isBreak = isBreakPhase();
+
+  if (mode === "beep"){
+    playTone({ freq: isBreak ? 660 : 880, duration: 0.10, type:"sine", gain:0.07 });
+    return;
+  }
+  if (mode === "double"){
+    playTone({ freq: isBreak ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
+    await sleep(120);
+    playTone({ freq: isBreak ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
+    return;
+  }
+  if (mode === "ding"){
+    // 柔らかい「ポン」：triangle + 少し低め
+    playTone({ freq: isBreak ? 523 : 784, duration: 0.14, type:"triangle", gain:0.06 });
+    await sleep(40);
+    playTone({ freq: isBreak ? 659 : 988, duration: 0.08, type:"sine", gain:0.04 });
+    return;
+  }
+  if (mode === "alarm"){
+    // 強め：3連
+    for (let i=0;i<3;i++){
+      playTone({ freq: 990, duration: 0.08, type:"square", gain:0.05 });
+      await sleep(110);
+    }
+    return;
+  }
+}
+
+// BGM自動制御
+const bgmWorkOn = $("bgmWorkOn");
+const bgmBreakOn = $("bgmBreakOn");
+
+// 音声アンロック（初回ユーザー操作で解禁）
+let audioUnlocked = false;
+async function unlockAudioOnce(){
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  try{
+    // 無音再生で解禁（失敗してもOK）
+    bgm.muted = true;
+    await bgm.play();
+    bgm.pause();
+    bgm.currentTime = 0;
+    bgm.muted = false;
+  }catch(e){
+    // 端末/ブラウザによっては失敗するが、次のユーザー操作で鳴ることもある
+  }
+}
+
+function buildAudioUrl(fileName){
+  return "audio/" + encodeURIComponent(fileName);
+}
+
+async function playSwitchSE(){
+  const file = seSelect?.value || "";
+  if (!file) return;
+
+  const url = buildAudioUrl(file);
+  try{
+    se.src = url;
+    se.currentTime = 0;
+    await se.play();
+  }catch(e){
+    // ブラウザ制限 or 404 等。UIを壊さないため黙って無視
+  }
+}
+
+// フェーズに応じてBGMを自動制御
+async function syncBgmForPhase(){
+  const isBreak = isBreakPhase();
+  const shouldPlay = isBreak ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+
+  if (!bgmSelect.value) return; // BGMが未選択なら何もしない
+
+  if (shouldPlay){
+    try{
+      await setBgmSrc(bgmSelect.value);
+      await bgm.play();
+    }catch(e){
+      // ここも制限で失敗し得る
+    }
+  }else{
+    bgm.pause();
+    bgm.currentTime = 0;
+  }
+}
+
   function showBgmError(msg) {
     if (!bgmError) return;
     bgmError.textContent = msg;
@@ -603,7 +775,7 @@
   });
 
   btnBgmPlay.addEventListener("click", async () => {
-    // 毎回選択値でsrcを作り直す（bgm.src が古いまま問題を潰す）
+    await unlockAudioOnce();
     if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
     try {
       await bgm.play();
@@ -781,21 +953,26 @@
     return (timer.setIndex % settings.longEvery) === 0;
   }
 
-  function onPhaseComplete(){
-    stopInterval();
+async function onPhaseComplete(){
+  stopInterval();
 
-    // フェーズ切替のタイミングでメッセージ更新（毎秒変わらない）
-    setRandomMessage();
+  // フェーズ切替のタイミングでメッセージ更新
+  setRandomMessage();
 
-    if (timer.phase === Phase.WORK){
-      resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
-    } else {
-      timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
-      resetToPhase(Phase.WORK);
-    }
-
-    if (settings.autoNext) startInterval();
+  // 次フェーズへ
+  if (timer.phase === Phase.WORK){
+    resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+  } else {
+    timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+    resetToPhase(Phase.WORK);
   }
+
+  // ここが「切替タイミング」：通知音＋BGM自動制御
+  await playSwitchSE();
+  await syncBgmForPhase();
+
+  if (settings.autoNext) startInterval();
+}
 
   function skipPhase(){
     timer.remainingSec = 0;
@@ -851,7 +1028,12 @@
     if (!timer.running) resetAll();
   });
 
-  ui.btnStart.addEventListener("click", () => startInterval());
+ui.btnStart.addEventListener("click", async () => {
+  ensureAudioCtx();          // 追加：WebAudio準備
+  await unlockAudioOnce();   // BGM側の制限対策
+  startInterval();
+});
+
   ui.btnPause.addEventListener("click", () => stopInterval());
   ui.btnReset.addEventListener("click", () => resetAll());
   ui.btnSkip.addEventListener("click", () => skipPhase());
