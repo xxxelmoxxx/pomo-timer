@@ -81,6 +81,33 @@
     white-space: nowrap;
   }
 
+  /* ★タブ（モード選択） */
+  .tabs{
+    display:flex;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 14px;
+    background: rgba(0,0,0,.10);
+    border: 1px solid rgba(255,255,255,.16);
+    margin: 10px 0 10px;
+  }
+  .tabbtn{
+    flex:1;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92);
+    padding: 10px 10px;
+    border-radius: 12px;
+    font-weight: 650;
+    cursor:pointer;
+    font-size: 12px;
+    letter-spacing:.02em;
+  }
+  .tabbtn.active{
+    background: linear-gradient(135deg, rgba(56,189,248,.40), rgba(167,139,250,.35));
+    border-color: rgba(255,255,255,.28);
+  }
+
   /* タイマー表示 */
   .phaseRow{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top: 10px; }
   .phaseTag{
@@ -285,18 +312,29 @@
     white-space: pre-wrap;
   }
   .error.show{ display:block; }
+
+  /* ★A/B入力の表示切替 */
+  .onlyAB{ display:none; }
+  .modeAB .onlyAB{ display:block; }
+  .modeAB .onlySingle{ display:none; }
 </style>
 </head>
 
 <body>
   <div class="wrap">
     <!-- Left: Timer -->
-    <section class="card compact">
+    <section class="card compact" id="leftCard">
       <div class="header">
         <div>
           <h1>ポモドーロタイマー</h1>
         </div>
         <div class="pill" id="presetLabel">Preset: 25/5</div>
+      </div>
+
+      <!-- ★モードタブ（復活） -->
+      <div class="tabs" role="tablist" aria-label="モード選択">
+        <button class="tabbtn" id="tabSingle" type="button" role="tab" aria-selected="true">作業＋休憩</button>
+        <button class="tabbtn" id="tabAB" type="button" role="tab" aria-selected="false">作業A＋作業B＋休憩</button>
       </div>
 
       <div class="phaseRow">
@@ -360,9 +398,20 @@
           <input id="sets" type="number" min="1" max="12" value="4" />
         </div>
 
-        <div>
+        <!-- ★作業（単一モード） -->
+        <div class="onlySingle">
           <label for="workMin">作業（分）</label>
           <input id="workMin" type="number" min="1" max="180" value="25" />
+        </div>
+
+        <!-- ★作業A/B（ABモード） -->
+        <div class="onlyAB">
+          <label for="workAMin">作業A（分）</label>
+          <input id="workAMin" type="number" min="1" max="180" value="25" />
+        </div>
+        <div class="onlyAB">
+          <label for="workBMin">作業B（分）</label>
+          <input id="workBMin" type="number" min="1" max="180" value="25" />
         </div>
 
         <div>
@@ -483,79 +532,60 @@
   const themeSelect = $("themeSelect");
 
   const THEMES = [
-    // 1) Calm / 癒し
     { id:"calm_mist", label:"Calm｜癒し：ミスト", category:"Calm", vars:{
       "--bg1":"#BFE7F6","--bg2":"#D9C7FF","--card":"rgba(255,255,255,.18)","--text":"#0B1020","--muted":"rgba(11,16,32,.75)","--accent":"#2DD4BF","--accent2":"#A78BFA",
     }},
     { id:"calm_sand", label:"Calm｜癒し：サンド", category:"Calm", vars:{
       "--bg1":"#F7E7CE","--bg2":"#F3D6D6","--card":"rgba(255,255,255,.20)","--text":"#1F2937","--muted":"rgba(31,41,55,.72)","--accent":"#F59E0B","--accent2":"#FB7185",
     }},
-
-    // 2) Fresh / 爽やか
     { id:"fresh_aqua", label:"Fresh｜爽やか：アクア", category:"Fresh", vars:{
       "--bg1":"#7DD3FC","--bg2":"#A7F3D0","--card":"rgba(255,255,255,.16)","--text":"#06203A","--muted":"rgba(6,32,58,.72)","--accent":"#0EA5E9","--accent2":"#10B981",
     }},
     { id:"fresh_ice", label:"Fresh｜爽やか：アイス", category:"Fresh", vars:{
       "--bg1":"#E0F2FE","--bg2":"#E5E7EB","--card":"rgba(255,255,255,.22)","--text":"#0F172A","--muted":"rgba(15,23,42,.70)","--accent":"#38BDF8","--accent2":"#94A3B8",
     }},
-
-    // 3) Trust / 信頼
     { id:"trust_navy", label:"Trust｜信頼：ネイビー", category:"Trust", vars:{
       "--bg1":"#0F172A","--bg2":"#1F2937","--card":"rgba(255,255,255,.08)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.78)","--accent":"#60A5FA","--accent2":"#94A3B8",
     }},
     { id:"trust_brick", label:"Trust｜信頼：ブリック", category:"Trust", vars:{
       "--bg1":"#111827","--bg2":"#374151","--card":"rgba(255,255,255,.09)","--text":"#F9FAFB","--muted":"rgba(249,250,251,.76)","--accent":"#B45309","--accent2":"#93C5FD",
     }},
-
-    // 4) Warm / あたたかい
     { id:"warm_sunset", label:"Warm｜あたたかい：サンセット", category:"Warm", vars:{
       "--bg1":"#FB923C","--bg2":"#F472B6","--card":"rgba(255,255,255,.14)","--text":"#2A0A0A","--muted":"rgba(42,10,10,.72)","--accent":"#F97316","--accent2":"#EC4899",
     }},
     { id:"warm_cocoa", label:"Warm｜あたたかい：ココア", category:"Warm", vars:{
       "--bg1":"#A16207","--bg2":"#7C2D12","--card":"rgba(255,255,255,.10)","--text":"#FFF7ED","--muted":"rgba(255,247,237,.78)","--accent":"#FBBF24","--accent2":"#FDBA74",
     }},
-
-    // 5) Pop / 元気
     { id:"pop_candy", label:"Pop｜元気：キャンディ", category:"Pop", vars:{
       "--bg1":"#22C55E","--bg2":"#06B6D4","--card":"rgba(255,255,255,.13)","--text":"#04130C","--muted":"rgba(4,19,12,.70)","--accent":"#FDE047","--accent2":"#FB7185",
     }},
     { id:"pop_tropical", label:"Pop｜元気：トロピカル", category:"Pop", vars:{
       "--bg1":"#38BDF8","--bg2":"#F97316","--card":"rgba(255,255,255,.12)","--text":"#0B1220","--muted":"rgba(11,18,32,.72)","--accent":"#A3E635","--accent2":"#F43F5E",
     }},
-
-    // 6) Retro / レトロ
     { id:"retro_aqua_gold", label:"Retro｜レトロ：アクア×ゴールド", category:"Retro", vars:{
       "--bg1":"#67E8F9","--bg2":"#FDE68A","--card":"rgba(255,255,255,.18)","--text":"#1F2937","--muted":"rgba(31,41,55,.72)","--accent":"#CA8A04","--accent2":"#0EA5E9",
     }},
     { id:"retro_olive", label:"Retro｜レトロ：オリーブ", category:"Retro", vars:{
       "--bg1":"#A3A635","--bg2":"#0F766E","--card":"rgba(255,255,255,.10)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.78)","--accent":"#F59E0B","--accent2":"#EAB308",
     }},
-
-    // 7) Nature / 自然
     { id:"nature_forest", label:"Nature｜自然：フォレスト", category:"Nature", vars:{
       "--bg1":"#14532D","--bg2":"#0F766E","--card":"rgba(255,255,255,.09)","--text":"#ECFDF5","--muted":"rgba(236,253,245,.78)","--accent":"#84CC16","--accent2":"#FDE047",
     }},
     { id:"nature_meadow", label:"Nature｜自然：メドウ", category:"Nature", vars:{
       "--bg1":"#A7F3D0","--bg2":"#BBF7D0","--card":"rgba(255,255,255,.20)","--text":"#052016","--muted":"rgba(5,32,22,.70)","--accent":"#22C55E","--accent2":"#10B981",
     }},
-
-    // 8) Night / 夜
     { id:"night_indigo", label:"Night｜夜：インディゴ", category:"Night", vars:{
       "--bg1":"#111827","--bg2":"#312E81","--card":"rgba(255,255,255,.08)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.76)","--accent":"#A78BFA","--accent2":"#38BDF8",
     }},
     { id:"night_aurora", label:"Night｜夜：オーロラ", category:"Night", vars:{
       "--bg1":"#020617","--bg2":"#064E3B","--card":"rgba(255,255,255,.07)","--text":"#E2E8F0","--muted":"rgba(226,232,240,.75)","--accent":"#2DD4BF","--accent2":"#84CC16",
     }},
-
-    // 9) Mono / モノトーン
     { id:"mono_light", label:"Mono｜モノ：ライト", category:"Mono", vars:{
       "--bg1":"#F8FAFC","--bg2":"#E5E7EB","--card":"rgba(0,0,0,.06)","--text":"#0F172A","--muted":"rgba(15,23,42,.70)","--accent":"#111827","--accent2":"#64748B",
     }},
     { id:"mono_dark", label:"Mono｜モノ：ダーク", category:"Mono", vars:{
       "--bg1":"#0B1020","--bg2":"#111827","--card":"rgba(255,255,255,.08)","--text":"#F1F5F9","--muted":"rgba(241,245,249,.76)","--accent":"#E5E7EB","--accent2":"#94A3B8",
     }},
-
-    // 10) Pastel / パステル
     { id:"pastel_sakura", label:"Pastel｜パステル：さくら", category:"Pastel", vars:{
       "--bg1":"#FBCFE8","--bg2":"#E9D5FF","--card":"rgba(255,255,255,.22)","--text":"#1F2937","--muted":"rgba(31,41,55,.70)","--accent":"#FB7185","--accent2":"#A78BFA",
     }},
@@ -574,7 +604,6 @@
   function initThemeSelect(){
     if (!themeSelect) return;
 
-    // options生成
     themeSelect.innerHTML = "";
     for (const t of THEMES){
       const opt = document.createElement("option");
@@ -583,7 +612,6 @@
       themeSelect.appendChild(opt);
     }
 
-    // 初期値（保存がなければ calm_mist を採用）
     let saved = "calm_mist";
     try { saved = localStorage.getItem("pomo_theme_v2") || saved; } catch(e) {}
 
@@ -615,11 +643,37 @@
     messageBox.textContent = MESSAGES[i];
   }
 
+  // =========================
+  // ★Mode Tabs (Single / AB)
+  // =========================
+  const leftCard = $("leftCard");
+  const tabSingle = $("tabSingle");
+  const tabAB = $("tabAB");
+
+  const Mode = { SINGLE:"single", AB:"ab" };
+
+  function setModeUI(mode){
+    const isAB = (mode === Mode.AB);
+    leftCard?.classList.toggle("modeAB", isAB);
+
+    if (tabSingle){
+      tabSingle.classList.toggle("active", !isAB);
+      tabSingle.setAttribute("aria-selected", String(!isAB));
+    }
+    if (tabAB){
+      tabAB.classList.toggle("active", isAB);
+      tabAB.setAttribute("aria-selected", String(isAB));
+    }
+  }
+
   // ---------- Timer state ----------
-  const Phase = { WORK:"work", BREAK:"break", LONG_BREAK:"long_break" };
+  const Phase = { WORK:"work", WORK_A:"work_a", WORK_B:"work_b", BREAK:"break", LONG_BREAK:"long_break" };
 
   let settings = {
-    workMin: 25,
+    mode: Mode.SINGLE,
+    workMin: 25,     // SINGLE
+    workAMin: 25,    // AB
+    workBMin: 25,    // AB
     breakMin: 5,
     sets: 4,
     longEvery: 4,   // 0=なし
@@ -641,11 +695,17 @@
     return timer.phase === Phase.BREAK || timer.phase === Phase.LONG_BREAK;
   }
 
+  function isWorkPhase() {
+    return timer.phase === Phase.WORK || timer.phase === Phase.WORK_A || timer.phase === Phase.WORK_B;
+  }
+
   // ---------- UI ----------
   const ui = {
     preset: $("preset"),
     sets: $("sets"),
     workMin: $("workMin"),
+    workAMin: $("workAMin"),
+    workBMin: $("workBMin"),
     breakMin: $("breakMin"),
     longEvery: $("longEvery"),
     longMin: $("longMin"),
@@ -671,7 +731,11 @@
 
   function applySettingsToInputs(){
     ui.sets.value = settings.sets;
-    ui.workMin.value = settings.workMin;
+
+    if (ui.workMin) ui.workMin.value = settings.workMin;
+    if (ui.workAMin) ui.workAMin.value = settings.workAMin;
+    if (ui.workBMin) ui.workBMin.value = settings.workBMin;
+
     ui.breakMin.value = settings.breakMin;
     ui.longEvery.value = settings.longEvery;
     ui.longMin.value = settings.longMin;
@@ -679,6 +743,8 @@
 
     ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
     ui.setTotal.textContent = String(settings.sets);
+
+    setModeUI(settings.mode);
   }
 
   // ---------- SE (WebAudio) ----------
@@ -759,7 +825,6 @@
 
   // ---------- BGM ----------
   const bgm = $("bgm");
-  // ★デフォルト音量（0.0〜1.0）
   if (bgm) bgm.volume = 0.2;
 
   const bgmSelect = $("bgmSelect");
@@ -896,7 +961,25 @@
     });
   }
 
-  // ---------- UI updates ----------
+  // =========================
+  // Timer core (Single / AB)
+  // =========================
+  function phaseToLabel(phase){
+    if (phase === Phase.WORK) return "作業";
+    if (phase === Phase.WORK_A) return "作業A";
+    if (phase === Phase.WORK_B) return "作業B";
+    if (phase === Phase.BREAK) return "休憩";
+    return "長休憩";
+  }
+
+  function getPhaseTotalSec(phase){
+    if (phase === Phase.WORK) return settings.workMin * 60;
+    if (phase === Phase.WORK_A) return settings.workAMin * 60;
+    if (phase === Phase.WORK_B) return settings.workBMin * 60;
+    if (phase === Phase.BREAK) return settings.breakMin * 60;
+    return settings.longMin * 60;
+  }
+
   function updateRippleUI(){
     ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
     ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
@@ -915,9 +998,7 @@
     ui.phaseDot.classList.toggle("break", breakMode);
     ui.bar.classList.toggle("break", breakMode);
 
-    ui.phaseText.textContent =
-      timer.phase === Phase.WORK ? "作業" :
-      timer.phase === Phase.BREAK ? "休憩" : "長休憩";
+    ui.phaseText.textContent = phaseToLabel(timer.phase);
 
     ui.setCount.textContent = String(timer.setIndex);
     ui.timeText.textContent = fmtMMSS(timer.remainingSec);
@@ -964,23 +1045,16 @@
 
   function resetToPhase(phase){
     timer.phase = phase;
-    if (phase === Phase.WORK){
-      timer.phaseTotalSec = settings.workMin * 60;
-      timer.remainingSec = settings.workMin * 60;
-    } else if (phase === Phase.BREAK){
-      timer.phaseTotalSec = settings.breakMin * 60;
-      timer.remainingSec = settings.breakMin * 60;
-    } else {
-      timer.phaseTotalSec = settings.longMin * 60;
-      timer.remainingSec = settings.longMin * 60;
-    }
+    timer.phaseTotalSec = getPhaseTotalSec(phase);
+    timer.remainingSec = timer.phaseTotalSec;
     updatePhaseUI();
   }
 
   function resetAll(){
     stopInterval();
     timer.setIndex = 1;
-    resetToPhase(Phase.WORK);
+    // モードに応じて初期フェーズを決める
+    resetToPhase(settings.mode === Mode.AB ? Phase.WORK_A : Phase.WORK);
   }
 
   function isLongBreakDue(){
@@ -988,15 +1062,25 @@
     return (timer.setIndex % settings.longEvery) === 0;
   }
 
+  function nextAfterWork(){
+    // SINGLE: WORK -> (BREAK|LONG)
+    if (settings.mode === Mode.SINGLE) {
+      return isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK;
+    }
+    // AB: WORK_A -> WORK_B -> (BREAK|LONG)
+    if (timer.phase === Phase.WORK_A) return Phase.WORK_B;
+    return isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK;
+  }
+
   async function onPhaseComplete(){
     stopInterval();
     setRandomMessage();
 
-    if (timer.phase === Phase.WORK){
-      resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+    if (isWorkPhase()){
+      resetToPhase(nextAfterWork());
     } else {
       timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
-      resetToPhase(Phase.WORK);
+      resetToPhase(settings.mode === Mode.AB ? Phase.WORK_A : Phase.WORK);
     }
 
     ensureAudioCtx();
@@ -1025,35 +1109,55 @@
       return;
     }
     const p = parsePresetValue(value);
+
+    // SINGLEはworkMinに、ABは「A/Bも同じ値」に寄せる（挙動が分かりやすい）
     settings.workMin = p.workMin;
+    settings.workAMin = p.workMin;
+    settings.workBMin = p.workMin;
+
     settings.breakMin = p.breakMin;
     settings.sets = p.sets;
     settings.longEvery = p.longEvery;
     settings.longMin = p.longMin;
     settings.presetLabel = `${p.workMin}/${p.breakMin}`;
-    applySettingsToInputs();
 
+    applySettingsToInputs();
     if (!timer.running) resetAll();
   }
 
   function readSettingsFromInputs(){
-    const workMin = Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25));
-    const breakMin = Math.max(1, Math.min(60, parseInt(ui.breakMin.value,10) || 5));
     const sets = Math.max(1, Math.min(12, parseInt(ui.sets.value,10) || 4));
+    const breakMin = Math.max(1, Math.min(60, parseInt(ui.breakMin.value,10) || 5));
     const longEvery = Math.max(0, Math.min(12, parseInt(ui.longEvery.value,10) || 0));
     const longMin = Math.max(1, Math.min(120, parseInt(ui.longMin.value,10) || 15));
 
-    settings.workMin = workMin;
-    settings.breakMin = breakMin;
+    const workMin = ui.workMin ? Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25)) : 25;
+    const workAMin = ui.workAMin ? Math.max(1, Math.min(180, parseInt(ui.workAMin.value,10) || 25)) : 25;
+    const workBMin = ui.workBMin ? Math.max(1, Math.min(180, parseInt(ui.workBMin.value,10) || 25)) : 25;
+
     settings.sets = sets;
+    settings.breakMin = breakMin;
     settings.longEvery = longEvery;
     settings.longMin = longMin;
+
+    settings.workMin = workMin;
+    settings.workAMin = workAMin;
+    settings.workBMin = workBMin;
+
     settings.autoNext = ui.autoNext.checked;
 
-    settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
+    // 表示ラベルは SINGLE寄りの「代表値」として持たせる
+    // ABのときも、表示上はA/Bの合計にしてもよいが、既存UIを崩さないためここでは workMin 相当の表記に固定
+    if (settings.mode === Mode.AB){
+      settings.presetLabel = `${settings.workAMin}+${settings.workBMin}/${settings.breakMin}`;
+    } else {
+      settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
+    }
   }
 
-  // ---------- Events ----------
+  // =========================
+  // Events
+  // =========================
   ui.preset.addEventListener("change", () => applyPreset(ui.preset.value));
 
   ui.btnApply.addEventListener("click", async () => {
@@ -1074,14 +1178,46 @@
   ui.btnReset.addEventListener("click", () => resetAll());
   ui.btnSkip.addEventListener("click", () => skipPhase());
 
+  // ★タブ：モード切替
+  function saveMode(mode){
+    try { localStorage.setItem("pomo_mode_v1", mode); } catch(e) {}
+  }
+  function loadMode(){
+    let saved = Mode.SINGLE;
+    try { saved = localStorage.getItem("pomo_mode_v1") || saved; } catch(e) {}
+    if (saved !== Mode.SINGLE && saved !== Mode.AB) saved = Mode.SINGLE;
+    settings.mode = saved;
+    setModeUI(saved);
+  }
+  function switchMode(mode){
+    if (timer.running) return; // 誤操作防止：稼働中は切替不可（必要なら外してください）
+    settings.mode = mode;
+    saveMode(mode);
+    applySettingsToInputs();
+    resetAll();
+    setRandomMessage();
+  }
+
+  if (tabSingle) tabSingle.addEventListener("click", () => switchMode(Mode.SINGLE));
+  if (tabAB) tabAB.addEventListener("click", () => switchMode(Mode.AB));
+
   // ---------- Init ----------
   (function init(){
-    initThemeSelect();     // ★テーマ1段階
+    initThemeSelect();
+
+    loadMode();
+    // 初期タブUI
+    setModeUI(settings.mode);
+
     applySettingsToInputs();
     resetAll();
     setButtons();
     setRandomMessage();
     if (bgmSelect?.value) setBgmSrc(bgmSelect.value);
+
+    // 初期タブ active 反映
+    // （loadMode後に確実に反映）
+    setModeUI(settings.mode);
   })();
 
 })();
