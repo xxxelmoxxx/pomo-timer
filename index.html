@@ -4,21 +4,23 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ポモドーロタイマー</title>
+
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="favicon.png">
+
 <style>
   :root{
-    /* テーマ変数（JSから切替） */
+    /* 既存変数 + 追加（accent2） */
     --bg1:#667eea;
     --bg2:#764ba2;
     --card: rgba(255,255,255,.15);
     --text:#ffffff;
     --muted: rgba(255,255,255,.88);
 
-    --accent:#38bdf8;      /* 主要アクセント */
-    --accent2:#a78bfa;     /* 補助アクセント（任意） */
-    --break:#22c55e;       /* 休憩 */
+    --accent:#38bdf8;
+    --accent2:#a78bfa;
 
+    --break:#22c55e;
     --start1:#22c55e;
     --start2:#16a34a;
     --stop1:#6b7280;
@@ -81,33 +83,6 @@
     white-space: nowrap;
   }
 
-  /* ★タブ（モード選択） */
-  .tabs{
-    display:flex;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 14px;
-    background: rgba(0,0,0,.10);
-    border: 1px solid rgba(255,255,255,.16);
-    margin: 10px 0 10px;
-  }
-  .tabbtn{
-    flex:1;
-    border: 1px solid rgba(255,255,255,.18);
-    background: rgba(255,255,255,.10);
-    color: rgba(255,255,255,.92);
-    padding: 10px 10px;
-    border-radius: 12px;
-    font-weight: 650;
-    cursor:pointer;
-    font-size: 12px;
-    letter-spacing:.02em;
-  }
-  .tabbtn.active{
-    background: linear-gradient(135deg, rgba(56,189,248,.40), rgba(167,139,250,.35));
-    border-color: rgba(255,255,255,.28);
-  }
-
   /* タイマー表示 */
   .phaseRow{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top: 10px; }
   .phaseTag{
@@ -118,16 +93,8 @@
     color: var(--muted);
     font-size: 12px;
   }
-
-  .dot{
-    width:10px; height:10px; border-radius:999px;
-    background: var(--accent);
-    box-shadow: 0 0 12px rgba(56,189,248,.7);
-  }
-  .dot.break{
-    background: var(--break);
-    box-shadow: 0 0 12px rgba(34,197,94,.65);
-  }
+  .dot{ width:10px; height:10px; border-radius:999px; background: var(--accent); box-shadow: 0 0 12px rgba(56,189,248,.7); }
+  .dot.break{ background: var(--break); box-shadow: 0 0 12px rgba(34,197,94,.65); }
 
   .bigTime{
     font-variant-numeric: tabular-nums;
@@ -220,7 +187,6 @@
     margin-top: 6px;
     height: 140px;
   }
-
   .ripple{
     position:absolute;
     width: 18px;
@@ -230,7 +196,6 @@
     border: 2px solid rgba(34,197,94,.65);
     box-shadow: 0 0 18px rgba(34,197,94,.25);
   }
-
   .rippleOn .ripple{
     opacity: 1;
     animation: ripple 2.6s ease-out infinite;
@@ -256,7 +221,6 @@
     border: 1px solid rgba(255,255,255,.14);
   }
 
-  /* 左下メッセージ：カード化 */
   .messageCard{
     margin-top: 14px;
     padding: 14px 14px;
@@ -272,7 +236,6 @@
     .messageCard{ font-size: 16px; }
   }
 
-  /* detailsをUIとして馴染ませる */
   details.panel{
     border: 1px solid rgba(255,255,255,.14);
     background: rgba(0,0,0,.08);
@@ -289,7 +252,6 @@
   details.panel > summary::-webkit-details-marker{ display:none; }
   details.panel .inner{ margin-top: 10px; }
 
-  /* 右パネルをコンパクトに */
   .compact{ padding: 14px; }
   .compact .grid{ gap: 10px; }
   .compact label{ margin-bottom: 4px; }
@@ -298,7 +260,6 @@
   .compact .hint{ margin-top: 6px; line-height: 1.5; }
   .compact button{ padding: 10px 12px; border-radius: 10px; }
 
-  /* エラー表示 */
   .error{
     margin-top: 8px;
     padding: 10px 12px;
@@ -313,28 +274,52 @@
   }
   .error.show{ display:block; }
 
-  /* ★A/B入力の表示切替 */
-  .onlyAB{ display:none; }
-  .modeAB .onlyAB{ display:block; }
-  .modeAB .onlySingle{ display:none; }
+  /* モードタブ（Simple / Dual） */
+  .tabs{
+    display:flex;
+    gap:10px;
+    margin: 6px 0 12px;
+    flex-wrap:wrap;
+  }
+  .tabBtn{
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    color: rgba(255,255,255,.92);
+    font-weight: 700;
+    font-size: 12px;
+    cursor:pointer;
+  }
+  .tabBtn.active{
+    background: rgba(0,0,0,.18);
+    border-color: rgba(255,255,255,.26);
+  }
+  .dualOnly{ display:none; }
+  .dualMode .dualOnly{ display:block; }
+  .dualMode .simpleOnly{ display:none; }
+
+  /* テーマ選択（カテゴリ→テーマ） */
+  .theme2col{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 860px){
+    .theme2col{ grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 
 <body>
   <div class="wrap">
     <!-- Left: Timer -->
-    <section class="card compact" id="leftCard">
+    <section class="card compact">
       <div class="header">
         <div>
           <h1>ポモドーロタイマー</h1>
         </div>
         <div class="pill" id="presetLabel">Preset: 25/5</div>
-      </div>
-
-      <!-- ★モードタブ（復活） -->
-      <div class="tabs" role="tablist" aria-label="モード選択">
-        <button class="tabbtn" id="tabSingle" type="button" role="tab" aria-selected="true">作業＋休憩</button>
-        <button class="tabbtn" id="tabAB" type="button" role="tab" aria-selected="false">作業A＋作業B＋休憩</button>
       </div>
 
       <div class="phaseRow">
@@ -366,21 +351,34 @@
       <div class="messageCard" id="messageBox"></div>
     </section>
 
-    <!-- Right: Settings + BGM (compact) -->
-    <section class="card compact">
+    <!-- Right: Settings + BGM -->
+    <section class="card compact" id="settingsCard">
       <div class="header">
         <div>
           <h1>設定 / BGM</h1>
-          <div class="sub">テーマは1回のプルダウン選択。プリセットは従来どおり。</div>
+          <div class="sub">モード（タブ）で「作業＋休憩」か「作業A＋作業B＋休憩」を切替。テーマはカテゴリで絞り込みできます。</div>
         </div>
       </div>
 
-      <!-- ★テーマ選択（1段階） -->
-      <div style="margin-bottom:12px;">
-        <label for="themeSelect">テーマ</label>
-        <select id="themeSelect"></select>
+      <!-- モードタブ -->
+      <div class="tabs">
+        <button class="tabBtn" id="tabSimple" type="button">作業 と 休憩</button>
+        <button class="tabBtn" id="tabDual" type="button">作業A / 作業B / 休憩</button>
       </div>
 
+      <!-- テーマ：カテゴリ→テーマ -->
+      <div class="theme2col" style="margin-bottom:12px;">
+        <div>
+          <label for="themeCategorySelect">テーマカテゴリ</label>
+          <select id="themeCategorySelect"></select>
+        </div>
+        <div>
+          <label for="themeSelect">テーマ</label>
+          <select id="themeSelect"></select>
+        </div>
+      </div>
+
+      <!-- プリセット/時間 -->
       <div class="grid">
         <div>
           <label for="preset">プリセット</label>
@@ -398,18 +396,16 @@
           <input id="sets" type="number" min="1" max="12" value="4" />
         </div>
 
-        <!-- ★作業（単一モード） -->
-        <div class="onlySingle">
+        <div class="simpleOnly">
           <label for="workMin">作業（分）</label>
           <input id="workMin" type="number" min="1" max="180" value="25" />
         </div>
 
-        <!-- ★作業A/B（ABモード） -->
-        <div class="onlyAB">
+        <div class="dualOnly">
           <label for="workAMin">作業A（分）</label>
           <input id="workAMin" type="number" min="1" max="180" value="25" />
         </div>
-        <div class="onlyAB">
+        <div class="dualOnly">
           <label for="workBMin">作業B（分）</label>
           <input id="workBMin" type="number" min="1" max="180" value="25" />
         </div>
@@ -431,16 +427,14 @@
       </div>
 
       <div style="margin-top:12px; display:grid; gap:10px;">
-        <!-- 自動で次フェーズへ -->
         <div class="switch">
           <input id="autoNext" type="checkbox" checked />
           <div>
             <div style="font-weight:650;">自動で次フェーズへ</div>
-            <div class="hint" style="margin:6px 0 0;">ONだと、0秒で作業↔休憩を自動切替</div>
+            <div class="hint" style="margin:6px 0 0;">ONだと、0秒でフェーズを自動切替</div>
           </div>
         </div>
 
-        <!-- フェーズ切替サウンド -->
         <details class="panel" open>
           <summary>フェーズ切替サウンド</summary>
           <div class="inner">
@@ -468,7 +462,6 @@
           </div>
         </details>
 
-        <!-- BGM -->
         <details class="panel" open>
           <summary>BGM</summary>
           <div class="inner">
@@ -527,112 +520,105 @@
   };
 
   // =========================
-  // Theme (1段階選択 / 10カテゴリ×2)
+  // THEMES (カテゴリ×テーマ)
   // =========================
-  const themeSelect = $("themeSelect");
-
   const THEMES = [
-    { id:"calm_mist", label:"Calm｜癒し：ミスト", category:"Calm", vars:{
-      "--bg1":"#BFE7F6","--bg2":"#D9C7FF","--card":"rgba(255,255,255,.18)","--text":"#0B1020","--muted":"rgba(11,16,32,.75)","--accent":"#2DD4BF","--accent2":"#A78BFA",
+    { id:"calm_mist", label:"癒し：ミスト", category:"Calm", vars:{
+      "--bg1":"#BFE7F6","--bg2":"#D9C7FF","--card":"rgba(255,255,255,.18)","--text":"#0B1020","--muted":"rgba(11,16,32,.75)","--accent":"#2DD4BF","--accent2":"#A78BFA"
     }},
-    { id:"calm_sand", label:"Calm｜癒し：サンド", category:"Calm", vars:{
-      "--bg1":"#F7E7CE","--bg2":"#F3D6D6","--card":"rgba(255,255,255,.20)","--text":"#1F2937","--muted":"rgba(31,41,55,.72)","--accent":"#F59E0B","--accent2":"#FB7185",
+    { id:"calm_sand", label:"癒し：サンド", category:"Calm", vars:{
+      "--bg1":"#F7E7CE","--bg2":"#F3D6D6","--card":"rgba(255,255,255,.20)","--text":"#1F2937","--muted":"rgba(31,41,55,.72)","--accent":"#F59E0B","--accent2":"#FB7185"
     }},
-    { id:"fresh_aqua", label:"Fresh｜爽やか：アクア", category:"Fresh", vars:{
-      "--bg1":"#7DD3FC","--bg2":"#A7F3D0","--card":"rgba(255,255,255,.16)","--text":"#06203A","--muted":"rgba(6,32,58,.72)","--accent":"#0EA5E9","--accent2":"#10B981",
+
+    { id:"fresh_aqua", label:"爽やか：アクア", category:"Fresh", vars:{
+      "--bg1":"#7DD3FC","--bg2":"#A7F3D0","--card":"rgba(255,255,255,.16)","--text":"#06203A","--muted":"rgba(6,32,58,.72)","--accent":"#0EA5E9","--accent2":"#10B981"
     }},
-    { id:"fresh_ice", label:"Fresh｜爽やか：アイス", category:"Fresh", vars:{
-      "--bg1":"#E0F2FE","--bg2":"#E5E7EB","--card":"rgba(255,255,255,.22)","--text":"#0F172A","--muted":"rgba(15,23,42,.70)","--accent":"#38BDF8","--accent2":"#94A3B8",
+    { id:"fresh_ice", label:"爽やか：アイス", category:"Fresh", vars:{
+      "--bg1":"#E0F2FE","--bg2":"#E5E7EB","--card":"rgba(255,255,255,.22)","--text":"#0F172A","--muted":"rgba(15,23,42,.70)","--accent":"#38BDF8","--accent2":"#94A3B8"
     }},
-    { id:"trust_navy", label:"Trust｜信頼：ネイビー", category:"Trust", vars:{
-      "--bg1":"#0F172A","--bg2":"#1F2937","--card":"rgba(255,255,255,.08)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.78)","--accent":"#60A5FA","--accent2":"#94A3B8",
+
+    { id:"trust_navy", label:"信頼：ネイビー", category:"Trust", vars:{
+      "--bg1":"#0F172A","--bg2":"#1F2937","--card":"rgba(255,255,255,.08)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.78)","--accent":"#60A5FA","--accent2":"#94A3B8"
     }},
-    { id:"trust_brick", label:"Trust｜信頼：ブリック", category:"Trust", vars:{
-      "--bg1":"#111827","--bg2":"#374151","--card":"rgba(255,255,255,.09)","--text":"#F9FAFB","--muted":"rgba(249,250,251,.76)","--accent":"#B45309","--accent2":"#93C5FD",
+    { id:"trust_brick", label:"信頼：ブリック", category:"Trust", vars:{
+      "--bg1":"#111827","--bg2":"#374151","--card":"rgba(255,255,255,.09)","--text":"#F9FAFB","--muted":"rgba(249,250,251,.76)","--accent":"#B45309","--accent2":"#93C5FD"
     }},
-    { id:"warm_sunset", label:"Warm｜あたたかい：サンセット", category:"Warm", vars:{
-      "--bg1":"#FB923C","--bg2":"#F472B6","--card":"rgba(255,255,255,.14)","--text":"#2A0A0A","--muted":"rgba(42,10,10,.72)","--accent":"#F97316","--accent2":"#EC4899",
+
+    { id:"warm_sunset", label:"あたたかい：サンセット", category:"Warm", vars:{
+      "--bg1":"#FB923C","--bg2":"#F472B6","--card":"rgba(255,255,255,.14)","--text":"#2A0A0A","--muted":"rgba(42,10,10,.72)","--accent":"#F97316","--accent2":"#EC4899"
     }},
-    { id:"warm_cocoa", label:"Warm｜あたたかい：ココア", category:"Warm", vars:{
-      "--bg1":"#A16207","--bg2":"#7C2D12","--card":"rgba(255,255,255,.10)","--text":"#FFF7ED","--muted":"rgba(255,247,237,.78)","--accent":"#FBBF24","--accent2":"#FDBA74",
+    { id:"warm_cocoa", label:"あたたかい：ココア", category:"Warm", vars:{
+      "--bg1":"#A16207","--bg2":"#7C2D12","--card":"rgba(255,255,255,.10)","--text":"#FFF7ED","--muted":"rgba(255,247,237,.78)","--accent":"#FBBF24","--accent2":"#FDBA74"
     }},
-    { id:"pop_candy", label:"Pop｜元気：キャンディ", category:"Pop", vars:{
-      "--bg1":"#22C55E","--bg2":"#06B6D4","--card":"rgba(255,255,255,.13)","--text":"#04130C","--muted":"rgba(4,19,12,.70)","--accent":"#FDE047","--accent2":"#FB7185",
+
+    { id:"pop_candy", label:"元気：キャンディ", category:"Pop", vars:{
+      "--bg1":"#22C55E","--bg2":"#06B6D4","--card":"rgba(255,255,255,.13)","--text":"#04130C","--muted":"rgba(4,19,12,.70)","--accent":"#FDE047","--accent2":"#FB7185"
     }},
-    { id:"pop_tropical", label:"Pop｜元気：トロピカル", category:"Pop", vars:{
-      "--bg1":"#38BDF8","--bg2":"#F97316","--card":"rgba(255,255,255,.12)","--text":"#0B1220","--muted":"rgba(11,18,32,.72)","--accent":"#A3E635","--accent2":"#F43F5E",
+    { id:"pop_tropical", label:"元気：トロピカル", category:"Pop", vars:{
+      "--bg1":"#38BDF8","--bg2":"#F97316","--card":"rgba(255,255,255,.12)","--text":"#0B1220","--muted":"rgba(11,18,32,.72)","--accent":"#A3E635","--accent2":"#F43F5E"
     }},
-    { id:"retro_aqua_gold", label:"Retro｜レトロ：アクア×ゴールド", category:"Retro", vars:{
-      "--bg1":"#67E8F9","--bg2":"#FDE68A","--card":"rgba(255,255,255,.18)","--text":"#1F2937","--muted":"rgba(31,41,55,.72)","--accent":"#CA8A04","--accent2":"#0EA5E9",
+
+    { id:"retro_aqua_gold", label:"レトロ：アクア×ゴールド", category:"Retro", vars:{
+      "--bg1":"#67E8F9","--bg2":"#FDE68A","--card":"rgba(255,255,255,.18)","--text":"#1F2937","--muted":"rgba(31,41,55,.72)","--accent":"#CA8A04","--accent2":"#0EA5E9"
     }},
-    { id:"retro_olive", label:"Retro｜レトロ：オリーブ", category:"Retro", vars:{
-      "--bg1":"#A3A635","--bg2":"#0F766E","--card":"rgba(255,255,255,.10)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.78)","--accent":"#F59E0B","--accent2":"#EAB308",
+    { id:"retro_olive", label:"レトロ：オリーブ", category:"Retro", vars:{
+      "--bg1":"#A3A635","--bg2":"#0F766E","--card":"rgba(255,255,255,.10)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.78)","--accent":"#F59E0B","--accent2":"#EAB308"
     }},
-    { id:"nature_forest", label:"Nature｜自然：フォレスト", category:"Nature", vars:{
-      "--bg1":"#14532D","--bg2":"#0F766E","--card":"rgba(255,255,255,.09)","--text":"#ECFDF5","--muted":"rgba(236,253,245,.78)","--accent":"#84CC16","--accent2":"#FDE047",
+
+    { id:"nature_forest", label:"自然：フォレスト", category:"Nature", vars:{
+      "--bg1":"#14532D","--bg2":"#0F766E","--card":"rgba(255,255,255,.09)","--text":"#ECFDF5","--muted":"rgba(236,253,245,.78)","--accent":"#84CC16","--accent2":"#FDE047"
     }},
-    { id:"nature_meadow", label:"Nature｜自然：メドウ", category:"Nature", vars:{
-      "--bg1":"#A7F3D0","--bg2":"#BBF7D0","--card":"rgba(255,255,255,.20)","--text":"#052016","--muted":"rgba(5,32,22,.70)","--accent":"#22C55E","--accent2":"#10B981",
+    { id:"nature_meadow", label:"自然：メドウ", category:"Nature", vars:{
+      "--bg1":"#A7F3D0","--bg2":"#BBF7D0","--card":"rgba(255,255,255,.20)","--text":"#052016","--muted":"rgba(5,32,22,.70)","--accent":"#22C55E","--accent2":"#10B981"
     }},
-    { id:"night_indigo", label:"Night｜夜：インディゴ", category:"Night", vars:{
-      "--bg1":"#111827","--bg2":"#312E81","--card":"rgba(255,255,255,.08)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.76)","--accent":"#A78BFA","--accent2":"#38BDF8",
+
+    { id:"night_indigo", label:"夜：インディゴ", category:"Night", vars:{
+      "--bg1":"#111827","--bg2":"#312E81","--card":"rgba(255,255,255,.08)","--text":"#F8FAFC","--muted":"rgba(248,250,252,.76)","--accent":"#A78BFA","--accent2":"#38BDF8"
     }},
-    { id:"night_aurora", label:"Night｜夜：オーロラ", category:"Night", vars:{
-      "--bg1":"#020617","--bg2":"#064E3B","--card":"rgba(255,255,255,.07)","--text":"#E2E8F0","--muted":"rgba(226,232,240,.75)","--accent":"#2DD4BF","--accent2":"#84CC16",
+    { id:"night_aurora", label:"夜：オーロラ", category:"Night", vars:{
+      "--bg1":"#020617","--bg2":"#064E3B","--card":"rgba(255,255,255,.07)","--text":"#E2E8F0","--muted":"rgba(226,232,240,.75)","--accent":"#2DD4BF","--accent2":"#84CC16"
     }},
-    { id:"mono_light", label:"Mono｜モノ：ライト", category:"Mono", vars:{
-      "--bg1":"#F8FAFC","--bg2":"#E5E7EB","--card":"rgba(0,0,0,.06)","--text":"#0F172A","--muted":"rgba(15,23,42,.70)","--accent":"#111827","--accent2":"#64748B",
+
+    { id:"mono_light", label:"モノ：ライト", category:"Mono", vars:{
+      "--bg1":"#F8FAFC","--bg2":"#E5E7EB","--card":"rgba(0,0,0,.06)","--text":"#0F172A","--muted":"rgba(15,23,42,.70)","--accent":"#111827","--accent2":"#64748B"
     }},
-    { id:"mono_dark", label:"Mono｜モノ：ダーク", category:"Mono", vars:{
-      "--bg1":"#0B1020","--bg2":"#111827","--card":"rgba(255,255,255,.08)","--text":"#F1F5F9","--muted":"rgba(241,245,249,.76)","--accent":"#E5E7EB","--accent2":"#94A3B8",
+    { id:"mono_dark", label:"モノ：ダーク", category:"Mono", vars:{
+      "--bg1":"#0B1020","--bg2":"#111827","--card":"rgba(255,255,255,.08)","--text":"#F1F5F9","--muted":"rgba(241,245,249,.76)","--accent":"#E5E7EB","--accent2":"#94A3B8"
     }},
-    { id:"pastel_sakura", label:"Pastel｜パステル：さくら", category:"Pastel", vars:{
-      "--bg1":"#FBCFE8","--bg2":"#E9D5FF","--card":"rgba(255,255,255,.22)","--text":"#1F2937","--muted":"rgba(31,41,55,.70)","--accent":"#FB7185","--accent2":"#A78BFA",
+
+    { id:"pastel_sakura", label:"パステル：さくら", category:"Pastel", vars:{
+      "--bg1":"#FBCFE8","--bg2":"#E9D5FF","--card":"rgba(255,255,255,.22)","--text":"#1F2937","--muted":"rgba(31,41,55,.70)","--accent":"#FB7185","--accent2":"#A78BFA"
     }},
-    { id:"pastel_lemon", label:"Pastel｜パステル：レモン", category:"Pastel", vars:{
-      "--bg1":"#FEF9C3","--bg2":"#CFFAFE","--card":"rgba(255,255,255,.22)","--text":"#1F2937","--muted":"rgba(31,41,55,.70)","--accent":"#EAB308","--accent2":"#06B6D4",
+    { id:"pastel_lemon", label:"パステル：レモン", category:"Pastel", vars:{
+      "--bg1":"#FEF9C3","--bg2":"#CFFAFE","--card":"rgba(255,255,255,.22)","--text":"#1F2937","--muted":"rgba(31,41,55,.70)","--accent":"#EAB308","--accent2":"#06B6D4"
     }},
   ];
 
-  function applyTheme(themeId){
+  function getCategories() {
+    return [...new Set(THEMES.map(t => t.category))];
+  }
+  function getThemesByCategory(category) {
+    return THEMES.filter(t => t.category === category);
+  }
+
+  function applyThemeById(themeId) {
     const theme = THEMES.find(t => t.id === themeId);
     if (!theme) return;
     const root = document.documentElement;
     Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
+    try { localStorage.setItem("pomo_theme_id", themeId); } catch(e) {}
+    try { localStorage.setItem("pomo_theme_cat", theme.category); } catch(e) {}
   }
 
-  function initThemeSelect(){
-    if (!themeSelect) return;
-
-    themeSelect.innerHTML = "";
-    for (const t of THEMES){
-      const opt = document.createElement("option");
-      opt.value = t.id;
-      opt.textContent = t.label;
-      themeSelect.appendChild(opt);
-    }
-
-    let saved = "calm_mist";
-    try { saved = localStorage.getItem("pomo_theme_v2") || saved; } catch(e) {}
-
-    if (!THEMES.some(t => t.id === saved)) saved = "calm_mist";
-    themeSelect.value = saved;
-    applyTheme(saved);
-
-    themeSelect.addEventListener("change", () => {
-      const id = themeSelect.value;
-      applyTheme(id);
-      try { localStorage.setItem("pomo_theme_v2", id); } catch(e) {}
-    });
-  }
-
-  // ---------- Messages ----------
+  // =========================
+  // Messages
+  // =========================
   const messageBox = $("messageBox");
   const MESSAGES = [
     "休憩は「回復」なので、サボりではありません。むしろ性能チューニングです。",
     "うまく回らない日でも、開始ボタンを押せた時点でちゃんと前に進んでます。",
-    "集中は気合ではなく設計です。次の25分は“実験”にしましょう。",
-    "完璧じゃなくていい。25分だけ前へ。小さく積むほど強い。",
+    "集中は気合ではなく設計です。次の時間は“実験”にしましょう。",
+    "完璧じゃなくていい。少しだけ前へ。小さく積むほど強い。",
     "止まっても戻れたらOK。中断は失敗じゃなく、調整です。",
     "休憩で回復したぶん、次の作業は軽くなります。",
     "今日はスピードより継続。静かに積み上げる日でいきましょう。",
@@ -644,39 +630,23 @@
   }
 
   // =========================
-  // ★Mode Tabs (Single / AB)
+  // Mode (Tabs)
   // =========================
-  const leftCard = $("leftCard");
-  const tabSingle = $("tabSingle");
-  const tabAB = $("tabAB");
+  const settingsCard = $("settingsCard");
+  const tabSimple = $("tabSimple");
+  const tabDual = $("tabDual");
 
-  const Mode = { SINGLE:"single", AB:"ab" };
-
-  function setModeUI(mode){
-    const isAB = (mode === Mode.AB);
-    leftCard?.classList.toggle("modeAB", isAB);
-
-    if (tabSingle){
-      tabSingle.classList.toggle("active", !isAB);
-      tabSingle.setAttribute("aria-selected", String(!isAB));
-    }
-    if (tabAB){
-      tabAB.classList.toggle("active", isAB);
-      tabAB.setAttribute("aria-selected", String(isAB));
-    }
-  }
-
-  // ---------- Timer state ----------
-  const Phase = { WORK:"work", WORK_A:"work_a", WORK_B:"work_b", BREAK:"break", LONG_BREAK:"long_break" };
+  const Mode = { SIMPLE:"simple", DUAL:"dual" };
+  const Phase = { WORK:"work", WORKA:"workA", WORKB:"workB", BREAK:"break", LONG_BREAK:"long_break" };
 
   let settings = {
-    mode: Mode.SINGLE,
-    workMin: 25,     // SINGLE
-    workAMin: 25,    // AB
-    workBMin: 25,    // AB
+    mode: Mode.SIMPLE,
+    workMin: 25,
+    workAMin: 25,
+    workBMin: 25,
     breakMin: 5,
     sets: 4,
-    longEvery: 4,   // 0=なし
+    longEvery: 4,
     longMin: 15,
     autoNext: true,
     presetLabel: "25/5",
@@ -694,13 +664,53 @@
   function isBreakPhase() {
     return timer.phase === Phase.BREAK || timer.phase === Phase.LONG_BREAK;
   }
-
-  function isWorkPhase() {
-    return timer.phase === Phase.WORK || timer.phase === Phase.WORK_A || timer.phase === Phase.WORK_B;
+  function isLongBreakDue(){
+    if (settings.longEvery <= 0) return false;
+    return (timer.setIndex % settings.longEvery) === 0;
   }
 
-  // ---------- UI ----------
+  function initialPhaseForMode(){
+    return (settings.mode === Mode.DUAL) ? Phase.WORKA : Phase.WORK;
+  }
+
+  function phaseSeconds(phase){
+    if (phase === Phase.WORK) return settings.workMin * 60;
+    if (phase === Phase.WORKA) return settings.workAMin * 60;
+    if (phase === Phase.WORKB) return settings.workBMin * 60;
+    if (phase === Phase.BREAK) return settings.breakMin * 60;
+    return settings.longMin * 60;
+  }
+  function phaseLabel(){
+    if (timer.phase === Phase.WORK) return "作業";
+    if (timer.phase === Phase.WORKA) return "作業A";
+    if (timer.phase === Phase.WORKB) return "作業B";
+    if (timer.phase === Phase.BREAK) return "休憩";
+    return "長休憩";
+  }
+
+  function saveMode(){
+    try{ localStorage.setItem("pomo_mode", settings.mode); }catch(e){}
+  }
+  function loadMode(){
+    try{
+      const m = localStorage.getItem("pomo_mode");
+      if (m === Mode.SIMPLE || m === Mode.DUAL) settings.mode = m;
+    }catch(e){}
+  }
+  function updateModeUI(){
+    const isDual = settings.mode === Mode.DUAL;
+    settingsCard.classList.toggle("dualMode", isDual);
+    tabSimple.classList.toggle("active", !isDual);
+    tabDual.classList.toggle("active", isDual);
+  }
+
+  // =========================
+  // UI refs
+  // =========================
   const ui = {
+    themeCategorySelect: $("themeCategorySelect"),
+    themeSelect: $("themeSelect"),
+
     preset: $("preset"),
     sets: $("sets"),
     workMin: $("workMin"),
@@ -729,13 +739,74 @@
     rippleText: $("rippleText"),
   };
 
+  // =========================
+  // Theme UI init
+  // =========================
+  function renderThemeCategoryOptions(){
+    const cats = getCategories();
+    ui.themeCategorySelect.innerHTML = "";
+    cats.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      ui.themeCategorySelect.appendChild(opt);
+    });
+  }
+
+  function renderThemeOptions(category){
+    const themes = getThemesByCategory(category);
+    ui.themeSelect.innerHTML = "";
+    themes.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = t.label;
+      ui.themeSelect.appendChild(opt);
+    });
+  }
+
+  function loadThemeFromStorage(){
+    let cat = "Calm";
+    let id = "calm_mist";
+    try{
+      cat = localStorage.getItem("pomo_theme_cat") || cat;
+      id = localStorage.getItem("pomo_theme_id") || id;
+    }catch(e){}
+
+    // catが存在しない場合のフォールバック
+    const cats = getCategories();
+    if (!cats.includes(cat)) cat = cats[0];
+
+    renderThemeCategoryOptions();
+    ui.themeCategorySelect.value = cat;
+
+    renderThemeOptions(cat);
+
+    // idがカテゴリ内にない場合のフォールバック
+    const themes = getThemesByCategory(cat);
+    if (!themes.some(t => t.id === id)) id = themes[0].id;
+
+    ui.themeSelect.value = id;
+    applyThemeById(id);
+  }
+
+  ui.themeCategorySelect.addEventListener("change", () => {
+    const cat = ui.themeCategorySelect.value;
+    renderThemeOptions(cat);
+    const first = ui.themeSelect.value;
+    applyThemeById(first);
+  });
+  ui.themeSelect.addEventListener("change", () => {
+    applyThemeById(ui.themeSelect.value);
+  });
+
+  // =========================
+  // Settings UI
+  // =========================
   function applySettingsToInputs(){
     ui.sets.value = settings.sets;
-
     if (ui.workMin) ui.workMin.value = settings.workMin;
     if (ui.workAMin) ui.workAMin.value = settings.workAMin;
     if (ui.workBMin) ui.workBMin.value = settings.workBMin;
-
     ui.breakMin.value = settings.breakMin;
     ui.longEvery.value = settings.longEvery;
     ui.longMin.value = settings.longMin;
@@ -743,11 +814,11 @@
 
     ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
     ui.setTotal.textContent = String(settings.sets);
-
-    setModeUI(settings.mode);
   }
 
-  // ---------- SE (WebAudio) ----------
+  // =========================
+  // SE (WebAudio)
+  // =========================
   const seEnabled = $("seEnabled");
   const seSelect = $("seSelect");
   const btnSeTest = $("btnSeTest");
@@ -758,9 +829,7 @@
     if (!audioCtx) audioCtx = new Ctx();
     if (audioCtx.state !== "running") audioCtx.resume().catch(() => {});
   }
-
   function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
   function playTone({ freq=880, duration=0.12, type="sine", gain=0.08 } = {}){
     try{
       ensureAudioCtx();
@@ -783,12 +852,10 @@
       o.stop(now + duration + 0.02);
     }catch(e){}
   }
-
   async function playSwitchSE(){
     if (!seEnabled?.checked) return;
     const mode = seSelect?.value || "";
     if (!mode) return;
-
     const breakNow = isBreakPhase();
 
     if (mode === "beep"){
@@ -815,24 +882,24 @@
       return;
     }
   }
+  btnSeTest.addEventListener("click", async () => {
+    ensureAudioCtx();
+    await playSwitchSE();
+  });
 
-  if (btnSeTest) {
-    btnSeTest.addEventListener("click", async () => {
-      ensureAudioCtx();
-      await playSwitchSE();
-    });
-  }
-
-  // ---------- BGM ----------
+  // =========================
+  // BGM
+  // =========================
   const bgm = $("bgm");
-  if (bgm) bgm.volume = 0.2;
-
   const bgmSelect = $("bgmSelect");
   const bgmError = $("bgmError");
   const bgmWorkOn = $("bgmWorkOn");
   const bgmBreakOn = $("bgmBreakOn");
   const btnBgmPlay = $("btnBgmPlay");
   const btnBgmStop = $("btnBgmStop");
+
+  // デフォルト音量（0.2）
+  if (bgm) bgm.volume = 0.2;
 
   function showBgmError(msg) {
     if (!bgmError) return;
@@ -862,7 +929,6 @@
   }
 
   async function setBgmSrc(fileName) {
-    if (!bgm) return;
     bgm.pause();
     bgm.currentTime = 0;
 
@@ -880,7 +946,7 @@
 
   let audioUnlocked = false;
   async function unlockAudioOnce(){
-    if (!bgm || audioUnlocked) return;
+    if (audioUnlocked) return;
     try{
       bgm.muted = true;
       const p = bgm.play();
@@ -888,7 +954,6 @@
       bgm.pause();
       bgm.currentTime = 0;
       bgm.muted = false;
-
       audioUnlocked = true;
     }catch(e){
       bgm.muted = false;
@@ -897,32 +962,30 @@
   }
 
   async function playBgmNow(){
-    if (!bgm || !bgmSelect?.value) return;
+    if (!bgmSelect.value) return;
     try{
       await bgm.play();
       clearBgmError();
     }catch(e){
       showBgmError(
         "BGMを再生できませんでした。\n" +
-        "ブラウザの自動再生制限により、最初は「開始」などの操作が必要です。"
+        "ブラウザの自動再生制限により、最初は「開始」などユーザー操作が必要です。"
       );
     }
   }
 
   function stopBgmNow(){
-    if (!bgm) return;
     bgm.pause();
     bgm.currentTime = 0;
   }
 
   async function syncBgmForPhase(){
-    if (!bgm || !bgmSelect) return;
-
     if (!bgmSelect.value){
       stopBgmNow();
       return;
     }
 
+    // Dualでも A/B はどちらも「作業扱い」＝ bgmWorkOn
     const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
     if (!shouldPlay){
       stopBgmNow();
@@ -937,49 +1000,27 @@
     await playBgmNow();
   }
 
-  if (bgmSelect){
-    bgmSelect.addEventListener("change", async () => {
-      await unlockAudioOnce();
-      await setBgmSrc(bgmSelect.value);
-      await syncBgmForPhase();
-    });
-  }
-  if (bgmWorkOn) bgmWorkOn.addEventListener("change", () => syncBgmForPhase());
-  if (bgmBreakOn) bgmBreakOn.addEventListener("change", () => syncBgmForPhase());
+  bgmSelect.addEventListener("change", async () => {
+    await unlockAudioOnce();
+    await setBgmSrc(bgmSelect.value);
+    await syncBgmForPhase();
+  });
+  bgmWorkOn.addEventListener("change", () => syncBgmForPhase());
+  bgmBreakOn.addEventListener("change", () => syncBgmForPhase());
 
-  if (btnBgmPlay){
-    btnBgmPlay.addEventListener("click", async () => {
-      await unlockAudioOnce();
-      if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
-      await playBgmNow();
-    });
-  }
-  if (btnBgmStop){
-    btnBgmStop.addEventListener("click", () => {
-      stopBgmNow();
-      clearBgmError();
-    });
-  }
+  btnBgmPlay.addEventListener("click", async () => {
+    await unlockAudioOnce();
+    if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
+    await playBgmNow();
+  });
+  btnBgmStop.addEventListener("click", () => {
+    stopBgmNow();
+    clearBgmError();
+  });
 
   // =========================
-  // Timer core (Single / AB)
+  // Timer UI update
   // =========================
-  function phaseToLabel(phase){
-    if (phase === Phase.WORK) return "作業";
-    if (phase === Phase.WORK_A) return "作業A";
-    if (phase === Phase.WORK_B) return "作業B";
-    if (phase === Phase.BREAK) return "休憩";
-    return "長休憩";
-  }
-
-  function getPhaseTotalSec(phase){
-    if (phase === Phase.WORK) return settings.workMin * 60;
-    if (phase === Phase.WORK_A) return settings.workAMin * 60;
-    if (phase === Phase.WORK_B) return settings.workBMin * 60;
-    if (phase === Phase.BREAK) return settings.breakMin * 60;
-    return settings.longMin * 60;
-  }
-
   function updateRippleUI(){
     ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
     ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
@@ -998,8 +1039,7 @@
     ui.phaseDot.classList.toggle("break", breakMode);
     ui.bar.classList.toggle("break", breakMode);
 
-    ui.phaseText.textContent = phaseToLabel(timer.phase);
-
+    ui.phaseText.textContent = phaseLabel();
     ui.setCount.textContent = String(timer.setIndex);
     ui.timeText.textContent = fmtMMSS(timer.remainingSec);
 
@@ -1045,42 +1085,39 @@
 
   function resetToPhase(phase){
     timer.phase = phase;
-    timer.phaseTotalSec = getPhaseTotalSec(phase);
-    timer.remainingSec = timer.phaseTotalSec;
+    timer.phaseTotalSec = phaseSeconds(phase);
+    timer.remainingSec = phaseSeconds(phase);
     updatePhaseUI();
   }
 
   function resetAll(){
     stopInterval();
     timer.setIndex = 1;
-    // モードに応じて初期フェーズを決める
-    resetToPhase(settings.mode === Mode.AB ? Phase.WORK_A : Phase.WORK);
-  }
-
-  function isLongBreakDue(){
-    if (settings.longEvery <= 0) return false;
-    return (timer.setIndex % settings.longEvery) === 0;
-  }
-
-  function nextAfterWork(){
-    // SINGLE: WORK -> (BREAK|LONG)
-    if (settings.mode === Mode.SINGLE) {
-      return isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK;
-    }
-    // AB: WORK_A -> WORK_B -> (BREAK|LONG)
-    if (timer.phase === Phase.WORK_A) return Phase.WORK_B;
-    return isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK;
+    resetToPhase(initialPhaseForMode());
   }
 
   async function onPhaseComplete(){
     stopInterval();
     setRandomMessage();
 
-    if (isWorkPhase()){
-      resetToPhase(nextAfterWork());
+    // 遷移
+    if (settings.mode === Mode.SIMPLE){
+      if (timer.phase === Phase.WORK){
+        resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+      } else {
+        timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+        resetToPhase(Phase.WORK);
+      }
     } else {
-      timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
-      resetToPhase(settings.mode === Mode.AB ? Phase.WORK_A : Phase.WORK);
+      // DUAL: A -> B -> (break/long) -> A
+      if (timer.phase === Phase.WORKA){
+        resetToPhase(Phase.WORKB);
+      } else if (timer.phase === Phase.WORKB){
+        resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+      } else {
+        timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+        resetToPhase(Phase.WORKA);
+      }
     }
 
     ensureAudioCtx();
@@ -1096,7 +1133,9 @@
     onPhaseComplete();
   }
 
-  // ---------- Presets ----------
+  // =========================
+  // Presets
+  // =========================
   function parsePresetValue(v){
     const [w,b,s,l] = v.split("_").map(x => parseInt(x, 10));
     return { workMin:w, breakMin:b, sets:s, longEvery:s, longMin:l };
@@ -1110,8 +1149,9 @@
     }
     const p = parsePresetValue(value);
 
-    // SINGLEはworkMinに、ABは「A/Bも同じ値」に寄せる（挙動が分かりやすい）
+    // simple
     settings.workMin = p.workMin;
+    // dual はプリセット適用時に A/B 同値（後で別に変えられる）
     settings.workAMin = p.workMin;
     settings.workBMin = p.workMin;
 
@@ -1131,27 +1171,22 @@
     const longEvery = Math.max(0, Math.min(12, parseInt(ui.longEvery.value,10) || 0));
     const longMin = Math.max(1, Math.min(120, parseInt(ui.longMin.value,10) || 15));
 
-    const workMin = ui.workMin ? Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25)) : 25;
-    const workAMin = ui.workAMin ? Math.max(1, Math.min(180, parseInt(ui.workAMin.value,10) || 25)) : 25;
-    const workBMin = ui.workBMin ? Math.max(1, Math.min(180, parseInt(ui.workBMin.value,10) || 25)) : 25;
-
     settings.sets = sets;
     settings.breakMin = breakMin;
     settings.longEvery = longEvery;
     settings.longMin = longMin;
-
-    settings.workMin = workMin;
-    settings.workAMin = workAMin;
-    settings.workBMin = workBMin;
-
     settings.autoNext = ui.autoNext.checked;
 
-    // 表示ラベルは SINGLE寄りの「代表値」として持たせる
-    // ABのときも、表示上はA/Bの合計にしてもよいが、既存UIを崩さないためここでは workMin 相当の表記に固定
-    if (settings.mode === Mode.AB){
-      settings.presetLabel = `${settings.workAMin}+${settings.workBMin}/${settings.breakMin}`;
-    } else {
+    if (settings.mode === Mode.SIMPLE){
+      const workMin = Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25));
+      settings.workMin = workMin;
       settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
+    } else {
+      const workAMin = Math.max(1, Math.min(180, parseInt(ui.workAMin.value,10) || 25));
+      const workBMin = Math.max(1, Math.min(180, parseInt(ui.workBMin.value,10) || 25));
+      settings.workAMin = workAMin;
+      settings.workBMin = workBMin;
+      settings.presetLabel = `A${settings.workAMin}/B${settings.workBMin}/休${settings.breakMin}`;
     }
   }
 
@@ -1178,46 +1213,30 @@
   ui.btnReset.addEventListener("click", () => resetAll());
   ui.btnSkip.addEventListener("click", () => skipPhase());
 
-  // ★タブ：モード切替
-  function saveMode(mode){
-    try { localStorage.setItem("pomo_mode_v1", mode); } catch(e) {}
-  }
-  function loadMode(){
-    let saved = Mode.SINGLE;
-    try { saved = localStorage.getItem("pomo_mode_v1") || saved; } catch(e) {}
-    if (saved !== Mode.SINGLE && saved !== Mode.AB) saved = Mode.SINGLE;
-    settings.mode = saved;
-    setModeUI(saved);
-  }
-  function switchMode(mode){
-    if (timer.running) return; // 誤操作防止：稼働中は切替不可（必要なら外してください）
-    settings.mode = mode;
-    saveMode(mode);
-    applySettingsToInputs();
+  // モードタブ
+  function setMode(next){
+    settings.mode = next;
+    updateModeUI();
+    saveMode();
     resetAll();
-    setRandomMessage();
+    syncBgmForPhase();
   }
+  tabSimple.addEventListener("click", () => setMode(Mode.SIMPLE));
+  tabDual.addEventListener("click", () => setMode(Mode.DUAL));
 
-  if (tabSingle) tabSingle.addEventListener("click", () => switchMode(Mode.SINGLE));
-  if (tabAB) tabAB.addEventListener("click", () => switchMode(Mode.AB));
-
-  // ---------- Init ----------
+  // =========================
+  // Init
+  // =========================
   (function init(){
-    initThemeSelect();
-
     loadMode();
-    // 初期タブUI
-    setModeUI(settings.mode);
+    updateModeUI();
+    loadThemeFromStorage();
 
     applySettingsToInputs();
     resetAll();
     setButtons();
     setRandomMessage();
     if (bgmSelect?.value) setBgmSrc(bgmSelect.value);
-
-    // 初期タブ active 反映
-    // （loadMode後に確実に反映）
-    setModeUI(settings.mode);
   })();
 
 })();
