@@ -10,16 +10,16 @@
 
 <style>
   :root{
-    /* 既存変数 + 追加（accent2） */
+    /* Theme variables (JSで上書きされる) */
     --bg1:#667eea;
     --bg2:#764ba2;
     --card: rgba(255,255,255,.15);
     --text:#ffffff;
     --muted: rgba(255,255,255,.88);
-
     --accent:#38bdf8;
     --accent2:#a78bfa;
 
+    /* Common (テーマに依存させない) */
     --break:#22c55e;
     --start1:#22c55e;
     --start2:#16a34a;
@@ -161,6 +161,14 @@
     color: var(--text);
     outline:none;
   }
+  /* optgroup（カテゴリ見出し）の視認性を上げる */
+  optgroup{
+    color: rgba(255,255,255,.92);
+    font-weight: 800;
+  }
+  option{
+    color: #ffffff;
+  }
 
   .grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
@@ -298,16 +306,6 @@
   .dualOnly{ display:none; }
   .dualMode .dualOnly{ display:block; }
   .dualMode .simpleOnly{ display:none; }
-
-  /* テーマ選択（カテゴリ→テーマ） */
-  .theme2col{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  @media (max-width: 860px){
-    .theme2col{ grid-template-columns: 1fr; }
-  }
 </style>
 </head>
 
@@ -356,7 +354,7 @@
       <div class="header">
         <div>
           <h1>設定 / BGM</h1>
-          <div class="sub">モード（タブ）で「作業＋休憩」か「作業A＋作業B＋休憩」を切替。テーマはカテゴリで絞り込みできます。</div>
+          <div class="sub">モード（タブ）で「作業＋休憩」か「作業A＋作業B＋休憩」を切替。テーマは1つのプルダウンで選択できます。</div>
         </div>
       </div>
 
@@ -366,16 +364,10 @@
         <button class="tabBtn" id="tabDual" type="button">作業A / 作業B / 休憩</button>
       </div>
 
-      <!-- テーマ：カテゴリ→テーマ -->
-      <div class="theme2col" style="margin-bottom:12px;">
-        <div>
-          <label for="themeCategorySelect">テーマカテゴリ</label>
-          <select id="themeCategorySelect"></select>
-        </div>
-        <div>
-          <label for="themeSelect">テーマ</label>
-          <select id="themeSelect"></select>
-        </div>
+      <!-- テーマ：1回で選択（カテゴリ見出しつき） -->
+      <div style="margin-bottom:12px;">
+        <label for="themeSelect">テーマ</label>
+        <select id="themeSelect"></select>
       </div>
 
       <!-- プリセット/時間 -->
@@ -520,7 +512,7 @@
   };
 
   // =========================
-  // THEMES (カテゴリ×テーマ)
+  // THEMES (カテゴリ×テーマ)  ※指定の10カテゴリ設計
   // =========================
   const THEMES = [
     { id:"calm_mist", label:"癒し：ミスト", category:"Calm", vars:{
@@ -594,12 +586,19 @@
     }},
   ];
 
-  function getCategories() {
-    return [...new Set(THEMES.map(t => t.category))];
-  }
-  function getThemesByCategory(category) {
-    return THEMES.filter(t => t.category === category);
-  }
+  const CATEGORY_LABEL = {
+    Calm:   "Calm / 癒し（やわらかい・落ち着く）",
+    Fresh:  "Fresh / 爽やか（軽い・清潔感）",
+    Trust:  "Trust / 信頼（ビジネス・堅実）",
+    Warm:   "Warm / あたたかい（親しみ・安心）",
+    Pop:    "Pop / 元気（明るい・強い）",
+    Retro:  "Retro / レトロ（ノスタルジー・世界観）",
+    Nature: "Nature / 自然（オーガニック・緑）",
+    Night:  "Night / 夜（ダーク・集中）",
+    Mono:   "Mono / モノトーン（最小構成・汎用）",
+    Pastel: "Pastel / パステル（可愛い・柔和）",
+  };
+  const CATEGORY_ORDER = ["Calm","Fresh","Trust","Warm","Pop","Retro","Nature","Night","Mono","Pastel"];
 
   function applyThemeById(themeId) {
     const theme = THEMES.find(t => t.id === themeId);
@@ -607,7 +606,6 @@
     const root = document.documentElement;
     Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
     try { localStorage.setItem("pomo_theme_id", themeId); } catch(e) {}
-    try { localStorage.setItem("pomo_theme_cat", theme.category); } catch(e) {}
   }
 
   // =========================
@@ -708,7 +706,6 @@
   // UI refs
   // =========================
   const ui = {
-    themeCategorySelect: $("themeCategorySelect"),
     themeSelect: $("themeSelect"),
 
     preset: $("preset"),
@@ -740,61 +737,63 @@
   };
 
   // =========================
-  // Theme UI init
+  // Theme UI init (1プルダウン + optgroup)
   // =========================
-  function renderThemeCategoryOptions(){
-    const cats = getCategories();
-    ui.themeCategorySelect.innerHTML = "";
-    cats.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      ui.themeCategorySelect.appendChild(opt);
-    });
-  }
-
-  function renderThemeOptions(category){
-    const themes = getThemesByCategory(category);
+  function renderThemeSelect(){
     ui.themeSelect.innerHTML = "";
-    themes.forEach(t => {
-      const opt = document.createElement("option");
-      opt.value = t.id;
-      opt.textContent = t.label;
-      ui.themeSelect.appendChild(opt);
+
+    const byCat = new Map();
+    THEMES.forEach(t => {
+      if (!byCat.has(t.category)) byCat.set(t.category, []);
+      byCat.get(t.category).push(t);
+    });
+
+    CATEGORY_ORDER.forEach(cat => {
+      const list = byCat.get(cat);
+      if (!list || list.length === 0) return;
+
+      const og = document.createElement("optgroup");
+      og.label = CATEGORY_LABEL[cat] || cat;
+
+      list.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.label;
+        og.appendChild(opt);
+      });
+
+      ui.themeSelect.appendChild(og);
+    });
+
+    // カテゴリ順に存在しないカテゴリがあれば末尾に追加（保険）
+    byCat.forEach((list, cat) => {
+      if (CATEGORY_ORDER.includes(cat)) return;
+      const og = document.createElement("optgroup");
+      og.label = CATEGORY_LABEL[cat] || cat;
+      list.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.label;
+        og.appendChild(opt);
+      });
+      ui.themeSelect.appendChild(og);
     });
   }
 
   function loadThemeFromStorage(){
-    let cat = "Calm";
     let id = "calm_mist";
     try{
-      cat = localStorage.getItem("pomo_theme_cat") || cat;
       id = localStorage.getItem("pomo_theme_id") || id;
     }catch(e){}
 
-    // catが存在しない場合のフォールバック
-    const cats = getCategories();
-    if (!cats.includes(cat)) cat = cats[0];
+    // idが存在しない場合のフォールバック
+    if (!THEMES.some(t => t.id === id)) id = THEMES[0]?.id || "calm_mist";
 
-    renderThemeCategoryOptions();
-    ui.themeCategorySelect.value = cat;
-
-    renderThemeOptions(cat);
-
-    // idがカテゴリ内にない場合のフォールバック
-    const themes = getThemesByCategory(cat);
-    if (!themes.some(t => t.id === id)) id = themes[0].id;
-
+    renderThemeSelect();
     ui.themeSelect.value = id;
     applyThemeById(id);
   }
 
-  ui.themeCategorySelect.addEventListener("change", () => {
-    const cat = ui.themeCategorySelect.value;
-    renderThemeOptions(cat);
-    const first = ui.themeSelect.value;
-    applyThemeById(first);
-  });
   ui.themeSelect.addEventListener("change", () => {
     applyThemeById(ui.themeSelect.value);
   });
@@ -898,7 +897,6 @@
   const btnBgmPlay = $("btnBgmPlay");
   const btnBgmStop = $("btnBgmStop");
 
-  // デフォルト音量（0.2）
   if (bgm) bgm.volume = 0.2;
 
   function showBgmError(msg) {
@@ -985,7 +983,6 @@
       return;
     }
 
-    // Dualでも A/B はどちらも「作業扱い」＝ bgmWorkOn
     const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
     if (!shouldPlay){
       stopBgmNow();
@@ -1100,7 +1097,6 @@
     stopInterval();
     setRandomMessage();
 
-    // 遷移
     if (settings.mode === Mode.SIMPLE){
       if (timer.phase === Phase.WORK){
         resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
@@ -1109,7 +1105,6 @@
         resetToPhase(Phase.WORK);
       }
     } else {
-      // DUAL: A -> B -> (break/long) -> A
       if (timer.phase === Phase.WORKA){
         resetToPhase(Phase.WORKB);
       } else if (timer.phase === Phase.WORKB){
@@ -1149,9 +1144,7 @@
     }
     const p = parsePresetValue(value);
 
-    // simple
     settings.workMin = p.workMin;
-    // dual はプリセット適用時に A/B 同値（後で別に変えられる）
     settings.workAMin = p.workMin;
     settings.workBMin = p.workMin;
 
@@ -1213,7 +1206,6 @@
   ui.btnReset.addEventListener("click", () => resetAll());
   ui.btnSkip.addEventListener("click", () => skipPhase());
 
-  // モードタブ
   function setMode(next){
     settings.mode = next;
     updateModeUI();
