@@ -596,7 +596,10 @@
 
 <script>
 (() => {
+  "use strict";
+
   const $ = (id) => document.getElementById(id);
+
   const pad2 = (n) => String(n).padStart(2, "0");
   const fmtMMSS = (sec) => {
     sec = Math.max(0, Math.floor(sec));
@@ -604,9 +607,15 @@
     const s = sec % 60;
     return `${pad2(m)}:${pad2(s)}`;
   };
+  const fmtMSS = (sec) => {
+    sec = Math.max(0, Math.floor(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${pad2(s)}`;
+  };
 
   // =========================
-  // THEMES
+  // THEMES (カテゴリ×テーマ)
   // =========================
   const THEMES = [
     { id:"calm_mist", label:"癒し：ミスト", category:"Calm", vars:{
@@ -744,7 +753,7 @@
     presetLabel: "25/5",
   };
 
-  // 絶対時刻ベース（非アクティブで止まりにくくする）
+  // 絶対時刻ベース（非アクティブで「見た目だけ止まる」を減らす）
   let timer = {
     running: false,
     phase: Phase.WORK,
@@ -752,7 +761,7 @@
     remainingSec: 25*60,
     phaseTotalSec: 25*60,
     intervalId: null,
-    endAtMs: null, // このフェーズが終わる絶対時刻
+    endAtMs: null,
   };
 
   function isBreakPhase() {
@@ -832,7 +841,7 @@
   };
 
   // =========================
-  // Theme UI init (1プルダウン + optgroup)
+  // Theme UI init
   // =========================
   function renderThemeSelect(){
     ui.themeSelect.innerHTML = "";
@@ -860,7 +869,7 @@
       ui.themeSelect.appendChild(og);
     });
 
-    // 保険
+    // 保険：未定義カテゴリ
     byCat.forEach((list, cat) => {
       if (CATEGORY_ORDER.includes(cat)) return;
       const og = document.createElement("optgroup");
@@ -970,6 +979,7 @@
         playTone({ freq: 990, duration: 0.08, type:"square", gain:0.05 });
         await sleep(110);
       }
+      return;
     }
   }
   btnSeTest.addEventListener("click", async () => {
@@ -1006,7 +1016,120 @@
     bgmError.classList.remove("show");
   }
 
+  function buildAudioUrl(fileName) {
+    return "audio/" + encodeURIComponent(fileName);
+  }
+
+  let audioUnlocked = false;
+  async function unlockAudioOnce(){
+    if (audioUnlocked) return;
+    try{
+      if (!bgm) return;
+      bgm.muted = true;
+      const p = bgm.play();
+      if (p && typeof p.then === "function") await p;
+      bgm.pause();
+      bgm.currentTime = 0;
+      bgm.muted = false;
+      audioUnlocked = true;
+    }catch(e){
+      if (bgm) bgm.muted = false;
+      audioUnlocked = false;
+    }
+  }
+
+  async function setBgmSrc(fileName) {
+    if (!bgm) return;
+
+    bgm.pause();
+    bgm.currentTime = 0;
+
+    if (!fileName) {
+      bgm.removeAttribute("src");
+      bgm.load();
+      clearBgmError();
+      updateBgmBarUI();
+      return;
+    }
+
+    const url = buildAudioUrl(fileName);
+    clearBgmError();
+    bgm.src = url;
+    bgm.load();
+  }
+
+  async function playBgmNow(){
+    if (!bgm || !bgmSelect || !bgmSelect.value) return;
+    try{
+      await bgm.play();
+      clearBgmError();
+    }catch(e){
+      showBgmError(
+        "BGMを再生できませんでした。\n" +
+        "ブラウザの自動再生制限により、最初は「開始」などユーザー操作が必要です。"
+      );
+    } finally {
+      updateBgmBarUI();
+    }
+  }
+
+  function stopBgmNow(){
+    if (!bgm) return;
+    bgm.pause();
+    bgm.currentTime = 0;
+    updateBgmBarUI();
+  }
+
+  async function syncBgmForPhase(){
+    if (!bgm || !bgmSelect) return;
+
+    if (!bgmSelect.value){
+      stopBgmNow();
+      return;
+    }
+
+    const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+    if (!shouldPlay){
+      stopBgmNow();
+      return;
+    }
+
+    const nextUrl = buildAudioUrl(bgmSelect.value);
+    const nextAbs = new URL(nextUrl, location.href).href;
+    const curAbs = bgm.currentSrc || bgm.src || "";
+    if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
+
+    await playBgmNow();
+  }
+
+  function updateBgmBarUI(){
+    if (!bgm || !btnBgmToggle || !bgmCur || !bgmDur || !bgmSeek || !bgmVol) return;
+
+    // volume
+    const v = Number(bgmVol.value);
+    if (!Number.isNaN(v)) bgm.volume = Math.max(0, Math.min(1, v));
+
+    // duration
+    const dur = Number.isFinite(bgm.duration) ? bgm.duration : 0;
+    const cur = Number.isFinite(bgm.currentTime) ? bgm.currentTime : 0;
+
+    bgmCur.textContent = fmtMSS(cur);
+    bgmDur.textContent = fmtMSS(dur);
+
+    // seek (0..1000)
+    const ratio = dur > 0 ? (cur / dur) : 0;
+    const pos = Math.round(Math.max(0, Math.min(1, ratio)) * 1000);
+
+    // ユーザー操作中に上書きしない（ドラッグ中のガタつき防止）
+    if (!bgmSeek.matches(":active")) bgmSeek.value = String(pos);
+
+    btnBgmToggle.textContent = bgm.paused ? "▶" : "❚❚";
+  }
+
   if (bgm) {
+    // 初期音量反映
+    if (bgmVol) bgm.volume = Number(bgmVol.value) || 0.2;
+
     bgm.addEventListener("error", () => {
       const code = bgm.error?.code;
       showBgmError(
@@ -1015,13 +1138,328 @@
         `errorCode: ${code || "unknown"}\n` +
         "audio/フォルダの配置、ファイル名、配信環境（file://直開き等）を確認してください。"
       );
+      updateBgmBarUI();
+    });
+
+    bgm.addEventListener("loadedmetadata", updateBgmBarUI);
+    bgm.addEventListener("timeupdate", updateBgmBarUI);
+    bgm.addEventListener("play", updateBgmBarUI);
+    bgm.addEventListener("pause", updateBgmBarUI);
+    bgm.addEventListener("ended", updateBgmBarUI);
+  }
+
+  if (bgmSelect) {
+    bgmSelect.addEventListener("change", async () => {
+      await unlockAudioOnce();
+      await setBgmSrc(bgmSelect.value);
+      await syncBgmForPhase();
+      updateBgmBarUI();
     });
   }
+  bgmWorkOn?.addEventListener("change", () => syncBgmForPhase());
+  bgmBreakOn?.addEventListener("change", () => syncBgmForPhase());
 
-  function buildAudioUrl(fileName) {
-    return "audio/" + encodeURIComponent(fileName);
+  btnBgmPlay?.addEventListener("click", async () => {
+    await unlockAudioOnce();
+    if (bgmSelect.value) await setBgmSrc(bgmSelect.value);
+    await playBgmNow();
+  });
+  btnBgmStop?.addEventListener("click", () => {
+    stopBgmNow();
+    clearBgmError();
+  });
+
+  btnBgmToggle?.addEventListener("click", async () => {
+    await unlockAudioOnce();
+    if (!bgm) return;
+
+    if (!bgmSelect?.value) {
+      showBgmError("BGMを選択してください。");
+      return;
+    }
+    // 未設定ならセット
+    const nextUrl = buildAudioUrl(bgmSelect.value);
+    const nextAbs = new URL(nextUrl, location.href).href;
+    const curAbs = bgm.currentSrc || bgm.src || "";
+    if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
+
+    if (bgm.paused) await playBgmNow();
+    else bgm.pause();
+
+    updateBgmBarUI();
+  });
+
+  bgmVol?.addEventListener("input", () => updateBgmBarUI());
+
+  bgmSeek?.addEventListener("input", () => {
+    if (!bgm) return;
+    const dur = Number.isFinite(bgm.duration) ? bgm.duration : 0;
+    if (dur <= 0) return;
+    const v = Number(bgmSeek.value);
+    const ratio = Math.max(0, Math.min(1000, v)) / 1000;
+    bgm.currentTime = ratio * dur;
+    updateBgmBarUI();
+  });
+
+  // =========================
+  // Timer UI update
+  // =========================
+  function updateRippleUI(){
+    ui.rippleWrap.classList.toggle("rippleOn", isBreakPhase());
+    ui.rippleWrap.setAttribute("aria-hidden", isBreakPhase() ? "false" : "true");
+
+    if (timer.phase === Phase.BREAK) {
+      ui.rippleText.textContent = "休憩中：肩を落として、呼吸をひとつ。";
+    } else if (timer.phase === Phase.LONG_BREAK) {
+      ui.rippleText.textContent = "長休憩：水分補給。目を遠くに。";
+    } else {
+      ui.rippleText.textContent = "";
+    }
   }
 
-  async function setBgmSrc(fileName) {
-    if (!bgm) return;
-    bgm.pause();
+  function updatePhaseUI(){
+    const breakMode = isBreakPhase();
+    ui.phaseDot.classList.toggle("break", breakMode);
+    ui.bar.classList.toggle("break", breakMode);
+
+    ui.phaseText.textContent = phaseLabel();
+    ui.setCount.textContent = String(timer.setIndex);
+    ui.timeText.textContent = fmtMMSS(timer.remainingSec);
+
+    const pct = timer.phaseTotalSec > 0
+      ? ((timer.phaseTotalSec - timer.remainingSec) / timer.phaseTotalSec) * 100
+      : 0;
+    ui.bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+
+    document.title = `${ui.phaseText.textContent} ${fmtMMSS(timer.remainingSec)} - ポモドーロ`;
+    updateRippleUI();
+  }
+
+  function setButtons(){
+    ui.btnStart.disabled = timer.running;
+    ui.btnPause.disabled = !timer.running;
+  }
+
+  function stopInterval(){
+    if (timer.intervalId){
+      clearInterval(timer.intervalId);
+      timer.intervalId = null;
+    }
+    timer.running = false;
+    timer.endAtMs = null;
+    setButtons();
+  }
+
+  function computeRemainingFromEndAt(){
+    if (!timer.endAtMs) return timer.remainingSec;
+    const now = Date.now();
+    const diff = timer.endAtMs - now;
+    return Math.max(0, Math.ceil(diff / 1000));
+  }
+
+  async function tick(){
+    // 絶対時刻から残りを再計算
+    timer.remainingSec = computeRemainingFromEndAt();
+
+    if (timer.remainingSec <= 0){
+      timer.remainingSec = 0;
+      updatePhaseUI();
+      await onPhaseComplete();
+      return;
+    }
+    updatePhaseUI();
+  }
+
+  function startInterval(){
+    if (timer.running) return;
+    timer.running = true;
+    // 現在のremainingから絶対終了時刻を確定
+    timer.endAtMs = Date.now() + (timer.remainingSec * 1000);
+
+    setButtons();
+    // 250msでUI追従（実時間補正を優先）
+    timer.intervalId = setInterval(() => { tick(); }, 250);
+    tick();
+  }
+
+  function resetToPhase(phase){
+    timer.phase = phase;
+    timer.phaseTotalSec = phaseSeconds(phase);
+    timer.remainingSec = phaseSeconds(phase);
+    timer.endAtMs = timer.running ? (Date.now() + timer.remainingSec * 1000) : null;
+    updatePhaseUI();
+  }
+
+  function resetAll(){
+    stopInterval();
+    timer.setIndex = 1;
+    resetToPhase(initialPhaseForMode());
+  }
+
+  async function onPhaseComplete(){
+    // ここに入る時点で interval は回っている可能性があるので停止
+    stopInterval();
+    setRandomMessage();
+
+    if (settings.mode === Mode.SIMPLE){
+      if (timer.phase === Phase.WORK){
+        resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+      } else {
+        timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+        resetToPhase(Phase.WORK);
+      }
+    } else {
+      if (timer.phase === Phase.WORKA){
+        resetToPhase(Phase.WORKB);
+      } else if (timer.phase === Phase.WORKB){
+        resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
+      } else {
+        timer.setIndex = (timer.setIndex < settings.sets) ? (timer.setIndex + 1) : 1;
+        resetToPhase(Phase.WORKA);
+      }
+    }
+
+    ensureAudioCtx();
+    await playSwitchSE();
+    await syncBgmForPhase();
+
+    if (settings.autoNext) startInterval();
+  }
+
+  function skipPhase(){
+    timer.remainingSec = 0;
+    updatePhaseUI();
+    onPhaseComplete();
+  }
+
+  // =========================
+  // Presets
+  // =========================
+  function parsePresetValue(v){
+    const [w,b,s,l] = v.split("_").map(x => parseInt(x, 10));
+    return { workMin:w, breakMin:b, sets:s, longEvery:s, longMin:l };
+  }
+
+  function applyPreset(value){
+    if (value === "custom"){
+      settings.presetLabel = "Custom";
+      ui.presetLabel.textContent = `Preset: ${settings.presetLabel}`;
+      return;
+    }
+    const p = parsePresetValue(value);
+
+    settings.workMin = p.workMin;
+    settings.workAMin = p.workMin;
+    settings.workBMin = p.workMin;
+
+    settings.breakMin = p.breakMin;
+    settings.sets = p.sets;
+    settings.longEvery = p.longEvery;
+    settings.longMin = p.longMin;
+    settings.presetLabel = `${p.workMin}/${p.breakMin}`;
+
+    applySettingsToInputs();
+    if (!timer.running) resetAll();
+  }
+
+  function readSettingsFromInputs(){
+    const sets = Math.max(1, Math.min(12, parseInt(ui.sets.value,10) || 4));
+    const breakMin = Math.max(1, Math.min(60, parseInt(ui.breakMin.value,10) || 5));
+    const longEvery = Math.max(0, Math.min(12, parseInt(ui.longEvery.value,10) || 0));
+    const longMin = Math.max(1, Math.min(120, parseInt(ui.longMin.value,10) || 15));
+
+    settings.sets = sets;
+    settings.breakMin = breakMin;
+    settings.longEvery = longEvery;
+    settings.longMin = longMin;
+    settings.autoNext = ui.autoNext.checked;
+
+    if (settings.mode === Mode.SIMPLE){
+      const workMin = Math.max(1, Math.min(180, parseInt(ui.workMin.value,10) || 25));
+      settings.workMin = workMin;
+      settings.presetLabel = `${settings.workMin}/${settings.breakMin}`;
+    } else {
+      const workAMin = Math.max(1, Math.min(180, parseInt(ui.workAMin.value,10) || 25));
+      const workBMin = Math.max(1, Math.min(180, parseInt(ui.workBMin.value,10) || 25));
+      settings.workAMin = workAMin;
+      settings.workBMin = workBMin;
+      settings.presetLabel = `A${settings.workAMin}/B${settings.workBMin}/休${settings.breakMin}`;
+    }
+  }
+
+  // =========================
+  // Events
+  // =========================
+  ui.preset.addEventListener("change", () => applyPreset(ui.preset.value));
+
+  ui.btnApply.addEventListener("click", async () => {
+    readSettingsFromInputs();
+    applySettingsToInputs();
+    if (!timer.running) resetAll();
+    await syncBgmForPhase();
+  });
+
+  ui.btnStart.addEventListener("click", async () => {
+    ensureAudioCtx();
+    await unlockAudioOnce();
+    await syncBgmForPhase();
+    startInterval();
+  });
+
+  ui.btnPause.addEventListener("click", () => {
+    // pause: 絶対時刻から残りを確定して停止
+    if (timer.running){
+      timer.remainingSec = computeRemainingFromEndAt();
+      stopInterval();
+      updatePhaseUI();
+    }
+  });
+
+  ui.btnReset.addEventListener("click", () => resetAll());
+  ui.btnSkip.addEventListener("click", () => skipPhase());
+
+  function setMode(next){
+    settings.mode = next;
+    updateModeUI();
+    saveMode();
+    resetAll();
+    syncBgmForPhase();
+  }
+  tabSimple.addEventListener("click", () => setMode(Mode.SIMPLE));
+  tabDual.addEventListener("click", () => setMode(Mode.DUAL));
+
+  // タブ復帰・画面復帰時に補正（「止まったように見える」を軽減）
+  document.addEventListener("visibilitychange", () => {
+    if (!timer.running) return;
+    timer.remainingSec = computeRemainingFromEndAt();
+    updatePhaseUI();
+    if (timer.remainingSec <= 0) onPhaseComplete();
+  });
+  window.addEventListener("focus", () => {
+    if (!timer.running) return;
+    timer.remainingSec = computeRemainingFromEndAt();
+    updatePhaseUI();
+    if (timer.remainingSec <= 0) onPhaseComplete();
+  });
+
+  // =========================
+  // Init
+  // =========================
+  (function init(){
+    loadMode();
+    updateModeUI();
+    loadThemeFromStorage();
+
+    applySettingsToInputs();
+    resetAll();
+    setButtons();
+    setRandomMessage();
+
+    // BGMバー初期化
+    updateBgmBarUI();
+  })();
+
+})();
+</script>
+</body>
+</html>
