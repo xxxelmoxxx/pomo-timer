@@ -929,7 +929,11 @@
     if (!audioCtx) audioCtx = new Ctx();
     if (audioCtx.state !== "running") audioCtx.resume().catch(() => {});
   }
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+  function sleep(ms){
+    // 背景中は setTimeout が止まる/激しく遅延するので、待たずに即解決
+    if (document.hidden) return Promise.resolve();
+    return new Promise(r => setTimeout(r, ms));
+  }
   function playTone({ freq=880, duration=0.12, type="sine", gain=0.08 } = {}){
     try{
       ensureAudioCtx();
@@ -1300,7 +1304,8 @@
     // ここに入る時点で interval は回っている可能性があるので停止
     stopInterval();
     setRandomMessage();
-
+  
+    // ===== 次フェーズ計算（ここは必ず先に進める）=====
     if (settings.mode === Mode.SIMPLE){
       if (timer.phase === Phase.WORK){
         resetToPhase(isLongBreakDue() ? Phase.LONG_BREAK : Phase.BREAK);
@@ -1318,11 +1323,22 @@
         resetToPhase(Phase.WORKA);
       }
     }
-
-    ensureAudioCtx();
-    await playSwitchSE();
-    await syncBgmForPhase();
-
+  
+    // ===== 音処理（背景中は待たない／スキップ）=====
+    const canAudio = !document.hidden; // 重要：非表示中は音を待たない
+  
+    if (canAudio){
+      ensureAudioCtx();
+      // await しても良いが、遅延対策として「待たない」方が安定する
+      // ここは“鳴ればラッキー”にして、フェーズ進行を最優先にする
+      playSwitchSE();      // awaitしない
+      syncBgmForPhase();   // awaitしない（内部で再生失敗しても次へ進む）
+    } else {
+      // 背景中はBGM同期もしない（復帰時に sync する）
+      // 何もしない
+    }
+  
+    // ===== 自動で次フェーズ開始 =====
     if (settings.autoNext) startInterval();
   }
 
@@ -1428,18 +1444,34 @@
   tabSimple.addEventListener("click", () => setMode(Mode.SIMPLE));
   tabDual.addEventListener("click", () => setMode(Mode.DUAL));
 
+
+  function handleResume(){
+  // running中でなければ、表示だけ補正
+  if (!timer.running){
+    updatePhaseUI();
+    return;
+  }
+
+  // 残りを再計算
+  timer.remainingSec = computeRemainingFromEndAt();
+  updatePhaseUI();
+
+  // 0秒を跨いでいたら自動で次へ（タップ不要）
+  if (timer.remainingSec <= 0){
+    onPhaseComplete(); // await不要（内部で進行を優先している）
+  } else {
+    // 復帰したらBGM同期だけはしておく（復帰後は再生可能性が上がる）
+    syncBgmForPhase();
+  }
+}
+  
   // タブ復帰・画面復帰時に補正（「止まったように見える」を軽減）
   document.addEventListener("visibilitychange", () => {
-    if (!timer.running) return;
-    timer.remainingSec = computeRemainingFromEndAt();
-    updatePhaseUI();
-    if (timer.remainingSec <= 0) onPhaseComplete();
+    if (!document.hidden) handleResume();
   });
+  
   window.addEventListener("focus", () => {
-    if (!timer.running) return;
-    timer.remainingSec = computeRemainingFromEndAt();
-    updatePhaseUI();
-    if (timer.remainingSec <= 0) onPhaseComplete();
+    handleResume();
   });
 
   // =========================
