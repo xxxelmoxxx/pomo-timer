@@ -306,6 +306,99 @@
   .dualOnly{ display:none; }
   .dualMode .dualOnly{ display:block; }
   .dualMode .simpleOnly{ display:none; }
+
+  /* ===== BGM 操作バー（追加） ===== */
+  .audioBar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.12);
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  
+  .abBtn{
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    display:grid;
+    place-items:center;
+    padding: 0;
+    font-weight: 900;
+    line-height: 1;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  
+  .abTime{
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .abSep{ opacity: .7; margin: 0 2px; }
+  
+  .abSeek{
+    flex: 1 1 auto;
+    min-width: 120px;
+    height: 8px;
+    background: rgba(255,255,255,.18);
+    border-radius: 999px;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+  }
+  .abSeek::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(0,0,0,.18);
+  }
+  .abSeek::-moz-range-thumb{
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(0,0,0,.18);
+  }
+  
+  .abVolWrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .abVolIcon{
+    font-size: 14px;
+    opacity: .9;
+  }
+  .abVol{
+    width: 110px;
+    height: 8px;
+    background: rgba(255,255,255,.18);
+    border-radius: 999px;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+  }
+  .abVol::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(0,0,0,.18);
+  }
+  .abVol::-moz-range-thumb{
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(0,0,0,.18);
+  }
+  
+  @media (max-width: 860px){
+    .abVol{ width: 90px; }
+  }
+  
 </style>
 </head>
 
@@ -490,6 +583,25 @@
 
             <div class="error" id="bgmError"></div>
             <audio id="bgm" preload="none" loop></audio>
+
+            <!-- BGM 操作バー（追加） -->
+            <div class="audioBar" id="bgmBar" aria-label="BGMコントローラー">
+              <button type="button" class="abBtn" id="btnBgmToggle" aria-label="再生/停止">▶</button>
+            
+              <div class="abTime" aria-label="再生位置">
+                <span id="bgmCur">0:00</span>
+                <span class="abSep">/</span>
+                <span id="bgmDur">0:00</span>
+              </div>
+            
+              <input id="bgmSeek" class="abSeek" type="range" min="0" max="1000" value="0" step="1" aria-label="シーク" />
+            
+              <div class="abVolWrap" aria-label="音量">
+                <span class="abVolIcon">🔊</span>
+                <input id="bgmVol" class="abVol" type="range" min="0" max="1" value="0.2" step="0.01" aria-label="音量" />
+              </div>
+            </div>
+           
           </div>
         </details>
 
@@ -922,6 +1034,117 @@
     });
   }
 
+
+// ===== BGM 操作バー（追加） =====
+const btnBgmToggle = $("btnBgmToggle");
+const bgmSeek = $("bgmSeek");
+const bgmVol = $("bgmVol");
+const bgmCur = $("bgmCur");
+const bgmDur = $("bgmDur");
+
+function fmtTime(sec){
+  sec = Math.max(0, Math.floor(sec || 0));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+
+function setToggleIcon(){
+  if (!btnBgmToggle) return;
+  btnBgmToggle.textContent = bgm && !bgm.paused ? "⏸" : "▶";
+}
+
+// 初期音量：既存の bgm.volume=0.2 と同期
+if (bgm && bgmVol){
+  bgmVol.value = String(bgm.volume ?? 0.2);
+}
+
+// 音量スライダー -> audio
+bgmVol?.addEventListener("input", () => {
+  if (!bgm) return;
+  bgm.volume = Math.max(0, Math.min(1, parseFloat(bgmVol.value)));
+  try { localStorage.setItem("pomo_bgm_volume", String(bgm.volume)); } catch(e){}
+});
+
+// 保存音量の復元（任意）
+(function restoreVolume(){
+  if (!bgm) return;
+  try{
+    const v = localStorage.getItem("pomo_bgm_volume");
+    if (v !== null){
+      const vv = Math.max(0, Math.min(1, parseFloat(v)));
+      if (!Number.isNaN(vv)){
+        bgm.volume = vv;
+        if (bgmVol) bgmVol.value = String(vv);
+      }
+    }
+  }catch(e){}
+})();
+
+// 再生/停止トグル
+btnBgmToggle?.addEventListener("click", async () => {
+  await unlockAudioOnce(); // 既存関数
+  if (!bgmSelect.value){
+    // BGM未選択なら何もしない（またはエラー表示）
+    return;
+  }
+
+  // srcが未セット/違うなら合わせる
+  const nextUrl = buildAudioUrl(bgmSelect.value);
+  const nextAbs = new URL(nextUrl, location.href).href;
+  const curAbs = bgm.currentSrc || bgm.src || "";
+  if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
+
+  if (bgm.paused){
+    await playBgmNow(); // 既存関数
+  } else {
+    stopBgmNow();       // 既存関数
+  }
+  setToggleIcon();
+});
+
+// シーク：つまんでいる最中は timeupdate 反映を抑える
+let seeking = false;
+
+bgmSeek?.addEventListener("pointerdown", () => { seeking = true; });
+bgmSeek?.addEventListener("pointerup", () => { seeking = false; });
+
+bgmSeek?.addEventListener("input", () => {
+  if (!bgm || !Number.isFinite(bgm.duration) || bgm.duration <= 0) return;
+  const t = (parseInt(bgmSeek.value, 10) / 1000) * bgm.duration;
+  bgm.currentTime = Math.max(0, Math.min(bgm.duration, t));
+});
+
+// audio -> UI（時間・バー）
+function syncBarFromAudio(){
+  if (!bgm || !bgmSeek || !bgmCur || !bgmDur) return;
+
+  const dur = Number.isFinite(bgm.duration) ? bgm.duration : 0;
+  const cur = Number.isFinite(bgm.currentTime) ? bgm.currentTime : 0;
+
+  bgmDur.textContent = dur > 0 ? fmtTime(dur) : "0:00";
+  bgmCur.textContent = fmtTime(cur);
+
+  if (!seeking && dur > 0){
+    const v = Math.round((cur / dur) * 1000);
+    bgmSeek.value = String(Math.max(0, Math.min(1000, v)));
+  }
+
+  setToggleIcon();
+}
+
+bgm?.addEventListener("loadedmetadata", syncBarFromAudio);
+bgm?.addEventListener("timeupdate", syncBarFromAudio);
+bgm?.addEventListener("play", syncBarFromAudio);
+bgm?.addEventListener("pause", syncBarFromAudio);
+bgm?.addEventListener("ended", syncBarFromAudio);
+
+// BGM選択変更時：メタデータ読込後にバー更新
+bgmSelect?.addEventListener("change", () => {
+  // setBgmSrc は既に呼ばれている想定（あなたの既存実装）
+  setTimeout(syncBarFromAudio, 0);
+});
+  
   function buildAudioUrl(fileName) {
     return "audio/" + encodeURIComponent(fileName);
   }
@@ -1114,6 +1337,98 @@
         resetToPhase(Phase.WORKA);
       }
     }
+
+    // timer に endAtMs / lastTickMs を追加
+let timer = {
+  running: false,
+  phase: Phase.WORK,
+  setIndex: 1,
+  remainingSec: 25*60,
+  phaseTotalSec: 25*60,
+  intervalId: null,
+  endAtMs: null,       // 追加：このフェーズが終わる絶対時刻
+};
+
+// 追加：残り秒を絶対時刻から再計算
+function recomputeRemaining(){
+  if (!timer.endAtMs) return;
+  const msLeft = timer.endAtMs - Date.now();
+  const secLeft = Math.ceil(msLeft / 1000); // 端数は切り上げ（体感が自然）
+  timer.remainingSec = Math.max(0, secLeft);
+}
+
+function stopInterval(){
+  if (timer.intervalId){
+    clearInterval(timer.intervalId);
+    timer.intervalId = null;
+  }
+  // 停止した瞬間の残りを確定
+  if (timer.running){
+    recomputeRemaining();
+    timer.endAtMs = null; // pause時は endAt を消しておく（再開時に再設定）
+  }
+  timer.running = false;
+  setButtons();
+}
+
+function startInterval(){
+  if (timer.running) return;
+
+  // 再開時：今の remainingSec から endAt を再設定
+  timer.endAtMs = Date.now() + timer.remainingSec * 1000;
+
+  timer.running = true;
+  setButtons();
+
+  // 1000ms固定ではなく、更新は軽めに 250ms などでOK（残り秒は絶対時刻計算）
+  timer.intervalId = setInterval(async () => {
+    recomputeRemaining();
+
+    if (timer.remainingSec <= 0){
+      timer.remainingSec = 0;
+      updatePhaseUI();
+      await onPhaseComplete();
+    } else {
+      updatePhaseUI();
+    }
+  }, 250);
+}
+
+// resetToPhase は「remainingSec と endAtMs を整合」させる
+function resetToPhase(phase){
+  timer.phase = phase;
+  timer.phaseTotalSec = phaseSeconds(phase);
+  timer.remainingSec = timer.phaseTotalSec;
+
+  if (timer.running){
+    timer.endAtMs = Date.now() + timer.remainingSec * 1000;
+  } else {
+    timer.endAtMs = null;
+  }
+  updatePhaseUI();
+}
+
+function skipPhase(){
+  // 絶対時刻も含めて即終了
+  timer.remainingSec = 0;
+  timer.endAtMs = Date.now();
+  updatePhaseUI();
+  onPhaseComplete();
+}
+
+// 追加：復帰時にズレを即補正（見た目の「止まり」を軽減）
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && timer.running){
+    recomputeRemaining();
+    updatePhaseUI();
+  }
+});
+window.addEventListener("focus", () => {
+  if (timer.running){
+    recomputeRemaining();
+    updatePhaseUI();
+  }
+});
 
     ensureAudioCtx();
     await playSwitchSE();
