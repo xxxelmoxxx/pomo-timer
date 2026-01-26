@@ -546,11 +546,9 @@
               </select>
             </div>
 
-            <div class="row" style="margin-top:10px; align-items:center;">
-              <button type="button" class="abBtn" id="btnBgmToggle" aria-label="再生/停止">▶</button>
-              <div class="hint" style="margin:0;">
-                ▶で再生／❚❚で一時停止（下のバーと同一機能）
-              </div>
+            <div class="row" style="margin-top:10px;">
+              <button type="button" id="btnBgmPlay">BGM 再生</button>
+              <button type="button" id="btnBgmStop">BGM 停止</button>
             </div>
 
             <div class="row" style="margin-top:10px;">
@@ -570,6 +568,8 @@
 
             <!-- BGM 操作バー -->
             <div class="audioBar" id="bgmBar" aria-label="BGMコントローラー" style="margin-top:10px;">
+              <button type="button" class="abBtn" id="btnBgmToggle" aria-label="再生/停止">▶</button>
+
               <div class="abTime" aria-label="再生位置">
                 <span id="bgmCur">0:00</span>
                 <span class="abSep">/</span>
