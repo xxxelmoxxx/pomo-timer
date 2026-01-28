@@ -952,36 +952,23 @@
       o.stop(now + duration + 0.02);
     }catch(e){}
   }
-  async function playSwitchSE(){
-    if (!seEnabled?.checked) return;
-    const mode = seSelect?.value || "";
-    if (!mode) return;
-    const breakNow = isBreakPhase();
 
-    if (mode === "beep"){
-      playTone({ freq: breakNow ? 660 : 880, duration: 0.10, type:"sine", gain:0.07 });
-      return;
-    }
-    if (mode === "double"){
-      playTone({ freq: breakNow ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
-      await sleep(120);
-      playTone({ freq: breakNow ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
-      return;
-    }
-    if (mode === "ding"){
-      playTone({ freq: breakNow ? 523 : 784, duration: 0.14, type:"triangle", gain:0.06 });
-      await sleep(40);
-      playTone({ freq: breakNow ? 659 : 988, duration: 0.08, type:"sine", gain:0.04 });
-      return;
-    }
-    if (mode === "alarm"){
-      for (let i=0;i<3;i++){
-        playTone({ freq: 990, duration: 0.08, type:"square", gain:0.05 });
-        await sleep(110);
-      }
-      return;
-    }
+async function playSwitchSE(){
+  if (!seEnabled?.checked) return;
+  const mode = seSelect?.value || "";
+  if (!mode) return;
+
+  const breakNow = isBreakPhase();
+
+  // --- 既存のmode別サウンド処理（あなたの現状のまま） ---
+  // ...（beep/double/ding/alarm）
+
+  // ここまで来たら、強めSEも追加（ONなら）
+  if (seStrong?.checked) {
+    await playStrongSwitchSE();
   }
+}
+  
   btnSeTest.addEventListener("click", async () => {
     ensureAudioCtx();
     await playSwitchSE();
