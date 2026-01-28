@@ -953,21 +953,55 @@
     }catch(e){}
   }
 
-async function playSwitchSE(){
-  if (!seEnabled?.checked) return;
-  const mode = seSelect?.value || "";
-  if (!mode) return;
-
-  const breakNow = isBreakPhase();
-
-  // --- 既存のmode別サウンド処理（あなたの現状のまま） ---
-  // ...（beep/double/ding/alarm）
-
-  // ここまで来たら、強めSEも追加（ONなら）
-  if (seStrong?.checked) {
-    await playStrongSwitchSE();
+  function playStrongSwitchSE(breakNow){
+    // 「気づく」用の短い強めトーン（1回）
+    // 既存SEの邪魔をしないよう短く・高め
+    playTone({
+      freq: breakNow ? 740 : 1040,
+      duration: 0.18,
+      type: "square",
+      gain: 0.14
+    });
   }
-}
+  
+  async function playSwitchSE(){
+    if (!seEnabled?.checked) return;
+    const mode = seSelect?.value || "";
+    if (!mode) return;
+    const breakNow = isBreakPhase();
+  
+    if (mode === "beep"){
+      playTone({ freq: breakNow ? 660 : 880, duration: 0.10, type:"sine", gain:0.07 });
+      // ★追加で強いSEを重ねる
+      playStrongSwitchSE(breakNow);
+      return;
+    }
+    if (mode === "double"){
+      playTone({ freq: breakNow ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
+      await sleep(120);
+      playTone({ freq: breakNow ? 660 : 880, duration: 0.09, type:"sine", gain:0.07 });
+      // ★追加で強いSEを重ねる
+      playStrongSwitchSE(breakNow);
+      return;
+    }
+    if (mode === "ding"){
+      playTone({ freq: breakNow ? 523 : 784, duration: 0.14, type:"triangle", gain:0.06 });
+      await sleep(40);
+      playTone({ freq: breakNow ? 659 : 988, duration: 0.08, type:"sine", gain:0.04 });
+      // ★追加で強いSEを重ねる
+      playStrongSwitchSE(breakNow);
+      return;
+    }
+    if (mode === "alarm"){
+      for (let i=0;i<3;i++){
+        playTone({ freq: 990, duration: 0.08, type:"square", gain:0.05 });
+        await sleep(110);
+      }
+      // ★追加で強いSEを重ねる
+      playStrongSwitchSE(breakNow);
+      return;
+    }
+  }
   
   btnSeTest.addEventListener("click", async () => {
     ensureAudioCtx();
@@ -1062,8 +1096,13 @@ async function playSwitchSE(){
 
   function stopBgmNow(){
     if (!bgm) return;
-    bgm.pause();
-    bgm.currentTime = 0;
+    try{
+      bgm.pause();
+      // iOS/Safariの鳴り残り対策（念のため）
+      bgm.muted = true;
+      bgm.currentTime = 0;
+      bgm.muted = false;
+    }catch(e){}
     updateBgmBarUI();
   }
 
@@ -1274,7 +1313,12 @@ async function playSwitchSE(){
     timer.phaseTotalSec = phaseSeconds(phase);
     timer.remainingSec = phaseSeconds(phase);
     timer.endAtMs = timer.running ? (Date.now() + timer.remainingSec * 1000) : null;
+  
     updatePhaseUI();
+  
+    // ★追加：フェーズ変更直後に必ずBGM同期（休憩BGM OFFならここで止まる）
+    syncBgmForPhase();   // await不要（止める/再生の判定を即反映）
+    updateBgmBarUI();    // 表示追従
   }
 
   function resetAll(){
