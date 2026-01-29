@@ -13,8 +13,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout (branch)
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
       - name: Generate audio/bgm-list.json
         run: |
@@ -53,8 +56,12 @@ jobs:
             echo "No changes."
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add audio/bgm-list.json
           git commit -m "chore: update bgm list"
-          git push
+
+          # ★必ず実行中のブランチへ push
+          git push origin HEAD:${{ github.ref_name }}
