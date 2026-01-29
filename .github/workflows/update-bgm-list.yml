@@ -1,0 +1,60 @@
+name: Update BGM list
+
+on:
+  push:
+    paths:
+      - "audio/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate audio/bgm-list.json
+        run: |
+          python - << 'PY'
+          import json, os
+
+          audio_dir = "audio"
+          out_path = os.path.join(audio_dir, "bgm-list.json")
+
+          exts = {".mp3", ".wav", ".ogg", ".m4a", ".aac"}
+          ignore = {"bgm-list.json"}
+
+          names = []
+          if os.path.isdir(audio_dir):
+            for fn in os.listdir(audio_dir):
+              if fn in ignore:
+                continue
+              if fn.startswith("."):
+                continue
+              _, ext = os.path.splitext(fn)
+              if ext.lower() in exts:
+                names.append(fn)
+
+          names.sort(key=lambda s: s.lower())
+
+          os.makedirs(audio_dir, exist_ok=True)
+          with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(names, f, ensure_ascii=False, indent=2)
+
+          print("Wrote", out_path, "count=", len(names))
+          PY
+
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add audio/bgm-list.json
+          git commit -m "chore: update bgm list"
+          git push
