@@ -536,13 +536,6 @@
               <label for="bgmSelect">BGM（プルダウン）</label>
               <select id="bgmSelect">
                 <option value="">なし</option>
-                <option value="10degrees_Celsius_2.mp3">10degrees_Celsius_2.mp3</option>
-                <option value="2_23_AM_2.mp3">2_23_AM_2.mp3</option>
-                <option value="Chill_Sunset.mp3">Chill_Sunset.mp3</option>
-                <option value="You_and_Me_2.mp3">You_and_Me_2.mp3</option>
-                <option value="優しい灯火(Tenderly_glow).mp3">優しい灯火(Tenderly_glow).mp3</option>
-                <option value="神隠しの真相_2.mp3">神隠しの真相_2.mp3</option>
-                <option value="野良猫は宇宙を目指した_2.mp3">野良猫は宇宙を目指した_2.mp3</option>
               </select>
             </div>
 
@@ -1013,6 +1006,21 @@
   // =========================
   const bgm = $("bgm");
   const bgmSelect = $("bgmSelect");
+
+  function saveBgmSelection(){
+    try{
+      localStorage.setItem("pomo_bgm_file", bgmSelect?.value || "");
+    }catch(e){}
+  }
+  
+  function loadBgmSelection(){
+    try{
+      return localStorage.getItem("pomo_bgm_file") || "";
+    }catch(e){
+      return "";
+    }
+  }
+  
   const bgmError = $("bgmError");
   const bgmWorkOn = $("bgmWorkOn");
   const bgmBreakOn = $("bgmBreakOn");
@@ -1176,6 +1184,49 @@
 
   if (bgmSelect) {
     bgmSelect.addEventListener("change", async () => {
+      saveBgmSelection();
+
+      async function loadBgmList(){
+        if (!bgmSelect) return;
+      
+        try{
+          const res = await fetch("audio/bgm-list.json", { cache: "no-store" });
+          if (!res.ok) throw new Error("bgm-list.json not found");
+      
+          const list = await res.json(); // ["a.mp3", "b.mp3", ...]
+          const saved = loadBgmSelection();
+      
+          // いったん作り直し
+          bgmSelect.innerHTML = "";
+      
+          const none = document.createElement("option");
+          none.value = "";
+          none.textContent = "なし";
+          bgmSelect.appendChild(none);
+      
+          if (Array.isArray(list)){
+            for (const name of list){
+              // 念のため文字列以外は除外
+              if (typeof name !== "string") continue;
+              const opt = document.createElement("option");
+              opt.value = name;
+              opt.textContent = name;
+              bgmSelect.appendChild(opt);
+            }
+          }
+      
+          // 保存値が有効なら復元
+          if (saved && Array.isArray(list) && list.includes(saved)){
+            bgmSelect.value = saved;
+          }else{
+            bgmSelect.value = "";
+          }
+      
+        }catch(e){
+          // 取得できない場合は、HTMLに書いてあるoptionをそのまま使う（UIに余計な表示は出さない）
+        }
+      }
+      
       await unlockAudioOnce();
       await setBgmSrc(bgmSelect.value);
       await syncBgmForPhase();
@@ -1514,8 +1565,16 @@
     setButtons();
     setRandomMessage();
 
-    // BGMバー初期化
-    updateBgmBarUI();
+    // BGMリスト読み込み（あれば自動生成された一覧を使う）
+    loadBgmList().then(async () => {
+      // 反映後、選択されているBGMに同期（選択なしなら止まる）
+      if (bgmSelect?.value) await setBgmSrc(bgmSelect.value);
+      await syncBgmForPhase();
+      updateBgmBarUI();
+    }).catch(() => {
+      updateBgmBarUI();
+    });
+
   })();
 
 })();
