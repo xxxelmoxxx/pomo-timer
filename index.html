@@ -1020,6 +1020,48 @@
       return "";
     }
   }
+
+  // ===== BGMリスト（audio/bgm-list.json）を読み込んで select を構築 =====
+  async function loadBgmList(){
+    if (!bgmSelect) return;
+  
+    try{
+      const res = await fetch("audio/bgm-list.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("bgm-list.json not found");
+  
+      const list = await res.json(); // ["a.mp3", "b.mp3", ...]
+      const saved = loadBgmSelection();
+  
+      // いったん作り直し
+      bgmSelect.innerHTML = "";
+  
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = "なし";
+      bgmSelect.appendChild(none);
+  
+      if (Array.isArray(list)){
+        for (const name of list){
+          if (typeof name !== "string") continue;
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          bgmSelect.appendChild(opt);
+        }
+      }
+  
+      // 保存値が有効なら復元
+      if (saved && Array.isArray(list) && list.includes(saved)){
+        bgmSelect.value = saved;
+      }else{
+        bgmSelect.value = "";
+      }
+  
+    }catch(e){
+      // 取得できない場合は、HTMLにある option（= 今は "なし"）をそのまま使う
+      // 画面に余計な文字は出さない
+    }
+  }
   
   const bgmError = $("bgmError");
   const bgmWorkOn = $("bgmWorkOn");
@@ -1185,54 +1227,14 @@
   if (bgmSelect) {
     bgmSelect.addEventListener("change", async () => {
       saveBgmSelection();
-
-      async function loadBgmList(){
-        if (!bgmSelect) return;
-      
-        try{
-          const res = await fetch("audio/bgm-list.json", { cache: "no-store" });
-          if (!res.ok) throw new Error("bgm-list.json not found");
-      
-          const list = await res.json(); // ["a.mp3", "b.mp3", ...]
-          const saved = loadBgmSelection();
-      
-          // いったん作り直し
-          bgmSelect.innerHTML = "";
-      
-          const none = document.createElement("option");
-          none.value = "";
-          none.textContent = "なし";
-          bgmSelect.appendChild(none);
-      
-          if (Array.isArray(list)){
-            for (const name of list){
-              // 念のため文字列以外は除外
-              if (typeof name !== "string") continue;
-              const opt = document.createElement("option");
-              opt.value = name;
-              opt.textContent = name;
-              bgmSelect.appendChild(opt);
-            }
-          }
-      
-          // 保存値が有効なら復元
-          if (saved && Array.isArray(list) && list.includes(saved)){
-            bgmSelect.value = saved;
-          }else{
-            bgmSelect.value = "";
-          }
-      
-        }catch(e){
-          // 取得できない場合は、HTMLに書いてあるoptionをそのまま使う（UIに余計な表示は出さない）
-        }
-      }
-      
+  
       await unlockAudioOnce();
       await setBgmSrc(bgmSelect.value);
       await syncBgmForPhase();
       updateBgmBarUI();
     });
   }
+  
   bgmWorkOn?.addEventListener("change", () => syncBgmForPhase());
   bgmBreakOn?.addEventListener("change", () => syncBgmForPhase());
 
@@ -1552,30 +1554,15 @@
     handleResume();
   });
 
-  // =========================
-  // Init
-  // =========================
-  (function init(){
-    loadMode();
-    updateModeUI();
-    loadThemeFromStorage();
-
-    applySettingsToInputs();
-    resetAll();
-    setButtons();
-    setRandomMessage();
-
-    // BGMリスト読み込み（あれば自動生成された一覧を使う）
-    loadBgmList().then(async () => {
-      // 反映後、選択されているBGMに同期（選択なしなら止まる）
-      if (bgmSelect?.value) await setBgmSrc(bgmSelect.value);
-      await syncBgmForPhase();
-      updateBgmBarUI();
-    }).catch(() => {
-      updateBgmBarUI();
-    });
-
-  })();
+  // BGMリスト読み込み（あれば自動生成された一覧を使う）
+  loadBgmList().then(async () => {
+    // 反映後、選択されているBGMに同期（選択なしなら止まる）
+    if (bgmSelect?.value) await setBgmSrc(bgmSelect.value);
+    await syncBgmForPhase();
+    updateBgmBarUI();
+  }).catch(() => {
+    updateBgmBarUI();
+  });
 
 })();
 </script>
