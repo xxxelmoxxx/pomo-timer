@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "audio/**"
+      - ".github/workflows/update-bgm-list.yml"
   workflow_dispatch:
 
 permissions:
@@ -13,14 +14,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (branch)
+      - name: Checkout (current branch)
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Generate audio/bgm-list.json
+        shell: bash
         run: |
+          set -euo pipefail
+
           python - << 'PY'
           import json, os
 
@@ -33,9 +37,7 @@ jobs:
           names = []
           if os.path.isdir(audio_dir):
             for fn in os.listdir(audio_dir):
-              if fn in ignore:
-                continue
-              if fn.startswith("."):
+              if fn in ignore or fn.startswith("."):
                 continue
               _, ext = os.path.splitext(fn)
               if ext.lower() in exts:
@@ -47,21 +49,24 @@ jobs:
           with open(out_path, "w", encoding="utf-8") as f:
             json.dump(names, f, ensure_ascii=False, indent=2)
 
-          print("Wrote", out_path, "count=", len(names))
+          print("Wrote:", out_path, "count=", len(names))
           PY
 
-      - name: Commit & push if changed
+          echo "=== ls audio/ (debug) ==="
+          ls -la audio || true
+
+          echo "=== cat audio/bgm-list.json (debug) ==="
+          cat audio/bgm-list.json
+
+      - name: Commit & push (force track)
+        shell: bash
         run: |
-          if git diff --quiet; then
-            echo "No changes."
-            exit 0
-          fi
+          set -euo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add audio/bgm-list.json
-          git commit -m "chore: update bgm list"
+          # ★ .gitignore 等で弾かれても強制的に追跡
+          git add -f audio/bgm-list.json
 
-          # ★必ず実行中のブランチへ push
-          git push origin HEAD:${{ github.ref_name }}
+          echo "=== git status (debug)
