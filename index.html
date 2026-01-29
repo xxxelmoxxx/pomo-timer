@@ -1027,9 +1027,13 @@
   
     try{
       const res = await fetch("audio/bgm-list.json", { cache: "no-store" });
-      if (!res.ok) throw new Error("bgm-list.json not found");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
   
-      const list = await res.json(); // ["a.mp3", "b.mp3", ...]
+      const data = await res.json();
+  
+      // 生成方式の揺れを吸収： ["a.mp3"] でも { files:["a.mp3"] } でもOK
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.files) ? data.files : []);
+  
       const saved = loadBgmSelection();
   
       // いったん作り直し
@@ -1040,26 +1044,28 @@
       none.textContent = "なし";
       bgmSelect.appendChild(none);
   
-      if (Array.isArray(list)){
-        for (const name of list){
-          if (typeof name !== "string") continue;
-          const opt = document.createElement("option");
-          opt.value = name;
-          opt.textContent = name;
-          bgmSelect.appendChild(opt);
-        }
+      for (const name of list){
+        if (typeof name !== "string") continue;
+        const trimmed = name.trim();
+        if (!trimmed) continue;
+  
+        const opt = document.createElement("option");
+        opt.value = trimmed;
+        opt.textContent = trimmed;
+        bgmSelect.appendChild(opt);
       }
   
       // 保存値が有効なら復元
-      if (saved && Array.isArray(list) && list.includes(saved)){
+      if (saved && list.includes(saved)){
         bgmSelect.value = saved;
       }else{
         bgmSelect.value = "";
       }
   
     }catch(e){
-      // 取得できない場合は、HTMLにある option（= 今は "なし"）をそのまま使う
-      // 画面に余計な文字は出さない
+      // 画面に余計な文字は出さない（要望通り）
+      // ただし原因調査できるようコンソールには残す
+      console.warn("[BGM] bgm-list.json load failed:", e);
     }
   }
   
@@ -1158,23 +1164,31 @@
 
   async function syncBgmForPhase(){
     if (!bgm || !bgmSelect) return;
-
+  
+    // BGM未選択なら確実に停止
     if (!bgmSelect.value){
       stopBgmNow();
       return;
     }
-
-    const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+  
+    const inBreak = isBreakPhase();
+    const shouldPlay = inBreak ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+  
+    // ★OFFのときは「非アクティブでも」必ず止める（ここが重要）
     if (!shouldPlay){
       stopBgmNow();
       return;
     }
-
+  
+    // ★ONだけどタブ非表示中は「再生は試さない」（止めない／鳴らさない）
+    // 復帰時に handleResume() 側で sync が走るのでそこで鳴る
+    if (document.hidden) return;
+  
     const nextUrl = buildAudioUrl(bgmSelect.value);
     const nextAbs = new URL(nextUrl, location.href).href;
     const curAbs = bgm.currentSrc || bgm.src || "";
     if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
-
+  
     await playBgmNow();
   }
 
@@ -1404,18 +1418,14 @@
       }
     }
   
-    // ===== 音処理（背景中は待たない／スキップ）=====
-    const canAudio = !document.hidden; // 重要：非表示中は音を待たない
-  
-    if (canAudio){
+    // ★BGMは「OFFなら止める」を最優先で常に反映
+    // 　ONの場合のみ、タブ非表示中は再生を試さない（sync側で抑止済み）
+    syncBgmForPhase();
+    
+    // ★切替SEは、タブ非表示中は鳴らそうとしない（無理にやらない）
+    if (!document.hidden){
       ensureAudioCtx();
-      // await しても良いが、遅延対策として「待たない」方が安定する
-      // ここは“鳴ればラッキー”にして、フェーズ進行を最優先にする
-      playSwitchSE();      // awaitしない
-      syncBgmForPhase();   // awaitしない（内部で再生失敗しても次へ進む）
-    } else {
-      // 背景中はBGM同期もしない（復帰時に sync する）
-      // 何もしない
+      playSwitchSE(); // awaitしない
     }
   
     // ===== 自動で次フェーズ開始 =====
