@@ -69,4 +69,14 @@ jobs:
           # ★ .gitignore 等で弾かれても強制的に追跡
           git add -f audio/bgm-list.json
 
-          echo "=== git status (debug)
+          echo "=== git status (debug) ==="
+          git status --porcelain
+
+          # ★ 「差分がない」だけでなく「未追跡/追加」も検知してコミットする
+          if git diff --cached --quiet; then
+            echo "No staged changes (bgm-list already up-to-date)."
+            exit 0
+          fi
+
+          git commit -m "chore: update bgm list"
+          git push origin HEAD:${{ github.ref_name }}
