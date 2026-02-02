@@ -1082,6 +1082,29 @@
   const bgmCur = $("bgmCur");
   const bgmDur = $("bgmDur");
 
+  // ===== BGM keep-alive（非アクティブでも休憩→作業で鳴らすため）
+  // 休憩で「無音」にしたい時も pause せず、volume=0 で再生を維持する
+  const BGM_KEEP_ALIVE = true; // ← これが肝
+  let bgmLastUserVol = Number(bgmVol?.value ?? 0.6);
+
+  function setBgmSilence(on){
+    if (!bgm) return;
+    if (on){
+      // 無音化（volume=0）して再生状態を維持
+      if (bgmVol && !bgmVol.matches(":active")) bgmVol.value = "0";
+      bgm.volume = 0;
+      bgm.dataset.silenced = "1";
+    } else {
+      // 復帰（ユーザー設定音量へ）
+      const v = Number(bgmVol?.value);
+      // スライダーが0のままなら、最後のユーザー音量で戻す
+      const restore = (Number.isFinite(v) && v > 0) ? v : (bgmLastUserVol || 0.6);
+      if (bgmVol && !bgmVol.matches(":active")) bgmVol.value = String(restore);
+      bgm.volume = Math.max(0, Math.min(1, restore));
+      delete bgm.dataset.silenced;
+    }
+  }
+
   function showBgmError(msg) {
     if (!bgmError) return;
     bgmError.textContent = msg;
@@ -1162,34 +1185,50 @@
     updateBgmBarUI();
   }
 
-  async function syncBgmForPhase(){
+  async function syncBgmForPhase({ allowPlay = true } = {}){
     if (!bgm || !bgmSelect) return;
-  
-    // BGM未選択なら確実に停止
+
+    // BGMが選ばれていないなら停止（ここは keep-alive しても意味がない）
     if (!bgmSelect.value){
       stopBgmNow();
       return;
     }
-  
-    const inBreak = isBreakPhase();
-    const shouldPlay = inBreak ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
-  
-    // ★OFFのときは「非アクティブでも」必ず止める（ここが重要）
-    if (!shouldPlay){
-      stopBgmNow();
-      return;
-    }
-  
-    // ★ONだけどタブ非表示中は「再生は試さない」（止めない／鳴らさない）
-    // 復帰時に handleResume() 側で sync が走るのでそこで鳴る
-    if (document.hidden) return;
-  
+
+    const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
+
+    // src が違うなら差し替え（これは可視/不可視に関係なくOK）
     const nextUrl = buildAudioUrl(bgmSelect.value);
     const nextAbs = new URL(nextUrl, location.href).href;
     const curAbs = bgm.currentSrc || bgm.src || "";
     if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
-  
-    await playBgmNow();
+
+    if (!shouldPlay){
+      // 休憩でBGM OFF：pause せずに無音化して再生状態維持
+      if (BGM_KEEP_ALIVE){
+        // 再生中なら無音化、停止中ならそのまま（勝手に play しない）
+        if (!bgm.paused) setBgmSilence(true);
+        updateBgmBarUI();
+        return;
+      }
+      // keep-alive しない場合は従来通り停止
+      stopBgmNow();
+      return;
+    }
+
+    // BGM ON：無音化が入ってたら復帰
+    setBgmSilence(false);
+
+    // 非アクティブ中は play() を呼ぶとブロックされやすいので、allowPlay=false の場合は呼ばない
+    if (bgm.paused){
+      if (allowPlay){
+        await playBgmNow();
+      } else {
+        // ここでは再生開始はしない（復帰時に handleResume が回収する）
+        updateBgmBarUI();
+      }
+    } else {
+      updateBgmBarUI();
+    }
   }
 
   function updateBgmBarUI(){
@@ -1282,7 +1321,15 @@
     updateBgmBarUI();
   });
 
-  bgmVol?.addEventListener("input", () => updateBgmBarUI());
+  bgmVol?.addEventListener("input", () => {
+    const v = Number(bgmVol.value);
+    if (Number.isFinite(v) && v > 0) bgmLastUserVol = v;
+    // 休憩でsilence中なら、スライダーを触った＝解除とみなす
+    if (bgm?.dataset?.silenced === "1" && v > 0) {
+      delete bgm.dataset.silenced;
+    }
+    updateBgmBarUI();
+  });
 
   bgmSeek?.addEventListener("input", () => {
     if (!bgm) return;
