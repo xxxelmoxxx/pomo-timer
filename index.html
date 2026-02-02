@@ -1006,6 +1006,8 @@
   // =========================
   const bgm = $("bgm");
   const bgmSelect = $("bgmSelect");
+  // いま audio 要素にロードしているBGMファイル名（currentSrc比較をやめる）
+  let bgmLoadedFile = "";
 
   function saveBgmSelection(){
     try{
@@ -1140,22 +1142,25 @@
 
   async function setBgmSrc(fileName) {
     if (!bgm) return;
-
+  
     bgm.pause();
     bgm.currentTime = 0;
-
+  
     if (!fileName) {
+      bgmLoadedFile = ""; // ★追加
       bgm.removeAttribute("src");
       bgm.load();
       clearBgmError();
       updateBgmBarUI();
       return;
     }
-
+  
     const url = buildAudioUrl(fileName);
     clearBgmError();
     bgm.src = url;
     bgm.load();
+  
+    bgmLoadedFile = fileName; // ★追加
   }
 
   async function playBgmNow(){
@@ -1196,21 +1201,34 @@
 
     const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
 
-    // src が違うなら差し替え（これは可視/不可視に関係なくOK）
-    const nextUrl = buildAudioUrl(bgmSelect.value);
-    const nextAbs = new URL(nextUrl, location.href).href;
-    const curAbs = bgm.currentSrc || bgm.src || "";
-    if (curAbs !== nextAbs) await setBgmSrc(bgmSelect.value);
+    // src差し替えは「ファイル名が変わった時だけ」
+    if (bgmLoadedFile !== bgmSelect.value) {
+      await setBgmSrc(bgmSelect.value);
+    }
 
     if (!shouldPlay){
-      // 休憩でBGM OFF：pause せずに無音化して再生状態維持
       if (BGM_KEEP_ALIVE){
-        // 再生中なら無音化、停止中ならそのまま（勝手に play しない）
-        if (!bgm.paused) setBgmSilence(true);
+        // paused でも「無音化状態」を必ず反映（休憩OFFの見た目/状態を固定）
+        setBgmSilence(true);
+    
+        // もし再生中でなく、かつ画面が見えているなら「無音で再生維持」を試す
+        // （非アクティブ中の play() はブロックされやすいので、hidden中は試さない）
+        if (bgm.paused && !document.hidden) {
+          try {
+            bgm.muted = true;
+            const p = bgm.play();
+            if (p && typeof p.catch === "function") p.catch(() => {});
+          } finally {
+            // 少し待たずに即戻す（背景でsetTimeout遅延するので）
+            bgm.muted = false;
+          }
+        }
+    
         updateBgmBarUI();
         return;
       }
-      // keep-alive しない場合は従来通り停止
+    
+      // keep-aliveしない場合は従来通り停止
       stopBgmNow();
       return;
     }
