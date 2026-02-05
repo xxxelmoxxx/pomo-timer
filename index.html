@@ -1070,6 +1070,29 @@
       console.warn("[BGM] bgm-list.json load failed:", e);
     }
   }
+
+  async function startBgmKeepAliveIfPossible(){
+    if (!BGM_KEEP_ALIVE) return;
+    if (!bgm || !bgmSelect?.value) return;
+  
+    // srcを確実に合わせる
+    if (bgmLoadedFile !== bgmSelect.value) {
+      await setBgmSrc(bgmSelect.value);
+    }
+  
+    // ここが重要：ユーザー操作（開始クリック）の中で一度「再生状態」に入れておく
+    if (bgm.paused){
+      try{
+        bgm.muted = true;
+        const p = bgm.play();
+        if (p && typeof p.then === "function") await p;
+      }catch(e){
+        // 失敗してもUIに出さない
+      }finally{
+        bgm.muted = false;
+      }
+    }
+  }
   
   const bgmError = $("bgmError");
   const bgmWorkOn = $("bgmWorkOn");
@@ -1192,56 +1215,61 @@
 
   async function syncBgmForPhase({ allowPlay = true } = {}){
     if (!bgm || !bgmSelect) return;
-
-    // BGMが選ばれていないなら停止（ここは keep-alive しても意味がない）
+  
+    // BGM未選択なら停止（keep-alive不可）
     if (!bgmSelect.value){
       stopBgmNow();
       return;
     }
-
+  
     const shouldPlay = isBreakPhase() ? !!bgmBreakOn?.checked : !!bgmWorkOn?.checked;
-
+  
     // src差し替えは「ファイル名が変わった時だけ」
     if (bgmLoadedFile !== bgmSelect.value) {
       await setBgmSrc(bgmSelect.value);
     }
-
+  
+    // ---------- OFF時：止めない。無音で再生を維持（＝keep-alive） ----------
     if (!shouldPlay){
       if (BGM_KEEP_ALIVE){
-        // paused でも「無音化状態」を必ず反映（休憩OFFの見た目/状態を固定）
         setBgmSilence(true);
-    
-        // もし再生中でなく、かつ画面が見えているなら「無音で再生維持」を試す
-        // （非アクティブ中の play() はブロックされやすいので、hidden中は試さない）
-        if (bgm.paused && !document.hidden) {
-          try {
+  
+        // 非アクティブでも「再生状態」だけは維持を試みる（失敗しても黙って継続）
+        if (bgm.paused){
+          try{
+            // 既にユーザー操作でunlock済みなら通ることが多い
             bgm.muted = true;
             const p = bgm.play();
             if (p && typeof p.catch === "function") p.catch(() => {});
-          } finally {
-            // 少し待たずに即戻す（背景でsetTimeout遅延するので）
+          }catch(e){
+            // 何もしない（画面に不要な文字を増やさない）
+          }finally{
             bgm.muted = false;
           }
         }
-    
+  
         updateBgmBarUI();
         return;
       }
-    
-      // keep-aliveしない場合は従来通り停止
+  
+      // keep-aliveしない設定なら停止
       stopBgmNow();
       return;
     }
-
-    // BGM ON：無音化が入ってたら復帰
+  
+    // ---------- ON時：無音解除＋（必要なら）再生 ----------
     setBgmSilence(false);
-
-    // 非アクティブ中は play() を呼ぶとブロックされやすいので、allowPlay=false の場合は呼ばない
+  
     if (bgm.paused){
       if (allowPlay){
-        await playBgmNow();
+        // 非アクティブ中でも「既に再生維持できていれば paused にならない」ので、
+        // ここに来るのは keep-alive が間に合ってないケース。試すだけ試す。
+        try{
+          await playBgmNow();
+        }catch(e){
+          // playBgmNow 内でエラー表示するのでここでは何もしない
+        }
       } else {
-        // ここでは再生開始はしない（復帰時に handleResume が回収する）
         updateBgmBarUI();
       }
     } else {
@@ -1573,7 +1601,13 @@
   ui.btnStart.addEventListener("click", async () => {
     ensureAudioCtx();
     await unlockAudioOnce();
+  
+    // ★追加：開始クリック時に keep-alive 再生を先に起動
+    await startBgmKeepAliveIfPossible();
+  
+    // その上で、フェーズに応じて「鳴らす/無音」を同期
     await syncBgmForPhase();
+  
     startInterval();
   });
 
