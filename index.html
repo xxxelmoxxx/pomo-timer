@@ -36,13 +36,15 @@ body.theme-night{--bg:#181e33;--surface:#252d46;--surface2:#2d3651;--text:#f1f1f
 @media(max-width:720px){.off-dialog{padding:30px 22px 24px}.off-switch-area{padding:15px 13px}.off-label{font-size:9px}.off-label>span:last-child{font-size:9px}.off-now{min-height:74px}.off-now-main{font-size:15px}}
 
 .audio-seek input{min-width:0}.audio-seek #musicTime{min-width:90px;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:11px}.audio-seek #musicSeek:disabled{opacity:.45}
+.classic-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:12px;font-weight:700}
+@media(max-width:520px){.header{flex-wrap:wrap;align-items:flex-start;gap:12px}.right-header{width:100%;justify-content:flex-end}.classic-link{font-size:11px}}
 </style>
 </head>
 <body class="theme-mist">
 <div class="page">
 <header class="header">
-  <div class="identity"><div class="mark" aria-hidden="true">◔</div><div><strong>ひと息ポモ</strong><small>GENTLE FOCUS · OFF SWITCH · PROTOTYPE</small></div></div>
-  <div class="right-header"><span class="top-label">ちょうどいい力で、今日を進める。</span><button class="round-btn" id="goSettings" type="button">⚙ 設定</button></div>
+  <div class="identity"><div class="mark" aria-hidden="true">◔</div><div><strong>ひと息ポモ</strong><small>GENTLE FOCUS · OFF SWITCH</small></div></div>
+  <div class="right-header"><span class="top-label">ちょうどいい力で、今日を進める。</span><a class="round-btn classic-link" href="./classic.html" aria-label="以前のポモドーロタイマーに切り替える">↶ 以前のバージョン</a><button class="round-btn" id="goSettings" type="button">⚙ 設定</button></div>
 </header>
 <div class="intro"><span class="eyebrow">A LITTLE IS ENOUGH.</span><h1>今日は、60％でいい。</h1><p>集中と同じくらい、オフも大切に。頑張りすぎる前に手を止める、小さな時間の道具です。</p></div>
 <div class="section-title"><b>好きな景色を選ぶ</b><small>時計のデザインを切り替えられます</small></div>
