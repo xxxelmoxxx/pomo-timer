@@ -446,6 +446,13 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
 .loop-mode-control strong{font-size:12px;line-height:1.5}
 .loop-mode-control small{font-size:10px;line-height:1.5;color:var(--muted)}
 .loop-mode-control:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+
+/* v3.2 · BGM repeat count and automatic next track */
+.bgm-rotation{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.bgm-rotation label{font-size:11px;color:var(--muted);flex-shrink:0}
+.bgm-rotation select{width:min(100%,220px);min-width:0;min-height:40px;border:1px solid var(--edge);border-radius:11px;background:var(--surface2);color:var(--text);padding:8px 10px;font-size:12px}
+.bgm-rotation-hint{margin:5px 0 0;font-size:11px;color:var(--muted);line-height:1.6}
+@media(max-width:380px){.bgm-rotation{align-items:stretch;flex-direction:column;gap:7px}.bgm-rotation select{width:100%;max-width:none}}
 </style>
 </head>
 <body class="theme-cafe">
@@ -583,7 +590,7 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
 </section>
 <div class="aside">
   <section class="panel side-card"><div class="side-title"><h2>今日の、小さな一歩</h2><span class="emoji" aria-hidden="true">✎</span></div><p class="side-desc">「全部終わらせる」ではなく「ここだけやる」で十分。</p><input id="intention" class="intention" maxlength="120" placeholder="例：請求書を3件だけ確認する" aria-label="今日の小さな一歩"><p class="one-thing">空欄のままでも始められます。</p><p id="handoffHint" class="handoff-hint" hidden></p></section>
-  <section class="panel side-card"><div class="side-title"><h2>音のある時間</h2><span class="emoji" aria-hidden="true">♫</span></div><p class="side-desc">いつものBGMをそのまま選べます。無音でもOK。</p><div class="audio-line"><select class="sound-select" id="music" aria-label="BGMの選択"><option value="">音楽なし</option></select><button id="musicToggle" class="sound-btn" type="button" aria-label="BGMを再生" aria-pressed="false">▶</button></div><div class="range-row audio-seek"><span>再生位置</span><input id="musicSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="BGMの再生位置"><span id="musicTime">0:00 / 0:00</span></div><div class="range-row"><span>音量</span><input id="volume" type="range" min="0" max="100" value="20" aria-label="BGMの音量"><span id="volumeLabel">20%</span></div><div class="audio-options"><label><input id="musicWork" type="checkbox" checked>集中中に再生</label><label><input id="musicBreak" type="checkbox">休憩中も再生</label></div><p class="audio-hint" id="audioHint" role="status">音楽は選んでから再生できます。</p><audio id="player" preload="none" loop></audio></section>
+  <section class="panel side-card"><div class="side-title"><h2>音のある時間</h2><span class="emoji" aria-hidden="true">♫</span></div><p class="side-desc">いつものBGMをそのまま選べます。無音でもOK。</p><div class="audio-line"><select class="sound-select" id="music" aria-label="BGMの選択"><option value="">音楽なし</option></select><button id="musicToggle" class="sound-btn" type="button" aria-label="BGMを再生" aria-pressed="false">▶</button></div><div class="range-row audio-seek"><span>再生位置</span><input id="musicSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="BGMの再生位置"><span id="musicTime">0:00 / 0:00</span></div><div class="range-row"><span>音量</span><input id="volume" type="range" min="0" max="100" value="20" aria-label="BGMの音量"><span id="volumeLabel">20%</span></div><div class="audio-options"><label><input id="musicWork" type="checkbox" checked>集中中に再生</label><label><input id="musicBreak" type="checkbox">休憩中も再生</label></div><div class="bgm-rotation"><label for="musicRepeat">次の曲に進むまで</label><select id="musicRepeat" aria-label="1曲を何回再生後に次の曲へ進むか"><option value="0">同じ曲を繰り返す</option><option value="1">1回再生</option><option value="2">2回再生</option><option value="3">3回再生</option><option value="5">5回再生</option></select></div><p class="bgm-rotation-hint" id="musicRepeatStatus" aria-live="polite">選んだ曲を繰り返します。</p><p class="audio-hint" id="audioHint" role="status">音楽は選んでから再生できます。</p><audio id="player" preload="none"></audio></section>
   <section class="panel side-card"><div class="side-title"><h2>今日の、できたこと</h2><span class="emoji" aria-hidden="true">✳</span></div><div class="stats"><div class="stat"><span class="num" id="count">0</span><small>着手した回数</small></div><div class="stat"><span class="num" id="minutes">0<span style="font-size:13px">分</span></span><small>積み重ねた集中時間</small></div></div><p class="gentle" id="gentle">何もできない日があっても、記録はその日の評価ではありません。</p></section>
   <section class="panel side-card" id="settingsPanel"><div class="side-title"><h2>自分好みに整える</h2><span class="emoji" aria-hidden="true">⌘</span></div><p class="side-desc">まずは何も変えずに使えます。必要なときだけ調整してください。</p>
     <details class="settings-wrap" id="advanced"><summary>時間・切替音・詳細設定を開く</summary><div class="settings-grid"><div class="form-row"><label for="workInput">集中（分）</label><input id="workInput" type="number" min="1" max="180" value="15"></div><div class="form-row"><label for="breakInput">休憩（分）</label><input id="breakInput" type="number" min="1" max="60" value="5"></div><div class="form-row"><label for="longInput">長休憩（分）</label><input id="longInput" type="number" min="1" max="60" value="15"></div><div class="form-row"><label for="longEvery">長休憩の頻度（セット）</label><input id="longEvery" type="number" min="0" max="12" value="4"></div><div class="form-row"><label for="chime">切り替え音</label><select id="chime"><option value="soft">やさしい音</option><option value="bell">澄んだ音</option><option value="off">鳴らさない</option></select></div><div class="form-row"><label for="dualB">作業Bの時間（分）</label><input id="dualB" type="number" min="1" max="180" value="15"></div></div><div class="toggles"><label><input id="dualMode" type="checkbox">作業A → 作業B → 休憩を使う</label><label><input id="offGuideEnabled" type="checkbox" checked>自動ループOFFのとき、集中終了後にオフの案内を表示する</label><label><input id="autoAdvance" type="checkbox" checked>作業・休憩を自動で繰り返す（画面のスイッチと連動）</label></div><div class="settings-buttons"><button id="apply" class="action-secondary" type="button">時間設定を適用</button><button id="testChime" class="action-secondary" type="button">切替音を試す</button></div><p class="audio-hint" id="settingsHint" role="status">設定を変更すると、進行中のタイマーは初期状態に戻ります。</p></details>
@@ -619,7 +626,7 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
     </div>
   </div>
   <button id="offFloating" class="off-floating" type="button" aria-label="いつでもオフにする">☾ オフにする</button>
-  <p class="credit">ひと息ポモ v3.1 · 6つの景色とOFFスイッチ / 2026.10<br>記録・設定はこのブラウザ内に保存。音楽には同じリポジトリの audio フォルダ内の音源を使用します。</p>
+  <p class="credit">ひと息ポモ v3.2 · 6つの景色とOFFスイッチ / 2026.10<br>記録・設定はこのブラウザ内に保存。音楽には同じリポジトリの audio フォルダ内の音源を使用します。</p>
 </div>
 <script>
 (()=>{'use strict';
@@ -636,17 +643,19 @@ const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMon
 const clamp=(value,min,max,def)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,Math.round(n))):def};
 function getSaved(){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}}
 const saved=getSaved();
-const settings={work:15,rest:5,long:15,longEvery:4,dualB:15,dual:false,auto:true,offGuide:true,closedDay:'',handoff:'',chime:'soft',theme:'cafe',preset:15,intention:'',track:'',volume:20,musicWork:true,musicBreak:false,...(saved.settings||{})};
+const settings={work:15,rest:5,long:15,longEvery:4,dualB:15,dual:false,auto:true,offGuide:true,closedDay:'',handoff:'',chime:'soft',theme:'cafe',preset:15,intention:'',track:'',volume:20,musicWork:true,musicBreak:false,musicRepeats:0,...(saved.settings||{})};
 // v3.1 migration: older versions stored auto:false as the default. Enable the intended
 // loop once, then respect the user's explicit on/off preference on subsequent visits.
 if(!settings.loopPreferenceV31){settings.auto=true;settings.loopPreferenceV31=true;}
 if(!['cafe','botanical','nordic','luxury','holo','geometry'].includes(settings.theme))settings.theme='cafe';
 if(!tracks.includes(settings.track))settings.track='';
+ if(![0,1,2,3,5].includes(Number(settings.musicRepeats)))settings.musicRepeats=0;else settings.musicRepeats=Number(settings.musicRepeats);
 const stats=(saved.stats?.day===today())?{...saved.stats}:{day:today(),starts:0,seconds:0};
 const timer={phase:'work',round:1,remaining:clamp(settings.work,1,180,15)*60,total:clamp(settings.work,1,180,15)*60,running:false,endAt:0,started:false,logged:0,notified:false};
 let audioContext=null;
 let offBeforeFocus=false; let lastOffFocus=null; let completionReason=false; let lastModalFocus=null;
 const player=$('player');
+ let trackCompletedPlays=0; // Completed full plays of the currently selected track.
 function save(){try{localStorage.setItem(key,JSON.stringify({settings,stats}))}catch{}}
 function rollover(){if(stats.day!==today()){stats.day=today();stats.starts=0;stats.seconds=0;save()}}
 function format(sec){sec=Math.max(0,Math.ceil(sec));return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`}
@@ -704,7 +713,27 @@ function renderTracks(){const list=$('music');list.replaceChildren();const none=
 async function loadRepoTracks(){try{const repoSite=location.hostname==='xxxelmoxxx.github.io'&&location.pathname.startsWith('/pomo-timer/');const listUrl=repoSite?'audio/bgm-list.json':'https://xxxelmoxxx.github.io/pomo-timer/audio/bgm-list.json';const response=await fetch(listUrl,{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);const json=await response.json();const filenames=Array.isArray(json)?json:(Array.isArray(json?.files)?json.files:[]);const valid=filenames.filter(name=>typeof name==='string'&&/^[^/\\]+\.mp3$/i.test(name));if(valid.length===0)return;const current=JSON.stringify(tracks);if(current===JSON.stringify(valid))return;tracks.splice(0,tracks.length,...valid);if(settings.track&&!tracks.includes(settings.track)){settings.track='';setMusicTrack();save()}renderTracks()}catch(e){console.info('BGM一覧は試作版の内蔵リストを使用します:',e?.message||e)}}
 
 function trackSrc(){const repoSite=location.hostname==='xxxelmoxxx.github.io'&&location.pathname.startsWith('/pomo-timer/');const root=repoSite?document.baseURI:'https://xxxelmoxxx.github.io/pomo-timer/';return new URL('audio/'+encodeURIComponent(settings.track),root).href}
-function setMusicTrack(){player.pause();player.removeAttribute('src');player.load();if(settings.track){player.src=trackSrc();player.volume=settings.volume/100;player.load()}syncMusicButton();syncMusicSeek()}
+function renderMusicRepeatStatus(){const limit=settings.musicRepeats;const n=trackCompletedPlays;$('musicRepeatStatus').textContent=limit===0?'同じ曲を繰り返します。':`この曲 ${Math.min(limit,n+1)} / ${limit} 回目 · 終了後に次の曲へ`;}
+ function setMusicTrack(){trackCompletedPlays=0;player.pause();player.removeAttribute('src');player.load();if(settings.track){player.src=trackSrc();player.volume=settings.volume/100;player.load()}syncMusicButton();syncMusicSeek();renderMusicRepeatStatus()}
+ async function advanceMusicOnEnd(){
+   if(!settings.track)return;
+   trackCompletedPlays++;
+   const limit=settings.musicRepeats;
+   if(limit>0&&trackCompletedPlays>=limit&&tracks.length>0){
+     const ix=tracks.indexOf(settings.track);
+     settings.track=tracks[(ix+1+tracks.length)%tracks.length];
+     $('music').value=settings.track;
+     save();
+     setMusicTrack();
+   } else {
+     renderMusicRepeatStatus();
+     try { player.currentTime=0; }catch(e){}
+   }
+   // A continuous playlist can be restricted when iPad Safari is backgrounded.
+   // Any failed resume leaves the Play button available rather than retrying endlessly.
+   await playMusic();
+ }
+
 function syncMusicButton(){const on=!!settings.track&&!player.paused;$('musicToggle').setAttribute('aria-pressed',String(on));$('musicToggle').textContent=on?'Ⅱ':'▶';$('musicToggle').setAttribute('aria-label',on?'BGMを停止':'BGMを再生')}
 async function playMusic(){if(!settings.track)return;try{if(!player.src||!player.src.includes(encodeURIComponent(settings.track)))setMusicTrack();player.volume=settings.volume/100;await player.play();$('audioHint').textContent='BGM再生中。音量はいつでも変えられます。'}catch(e){$('audioHint').textContent='音源の読み込みができません。ネット接続やブラウザの再生制限をご確認ください。'}syncMusicButton()}
 function syncAudio(){if(!settings.track)return;const shouldPlay=timer.running&&(currentWork()?settings.musicWork:settings.musicBreak);if(!shouldPlay){player.pause();syncMusicButton();return}if(player.paused)playMusic()}
@@ -763,13 +792,15 @@ if(location.hostname!=='xxxelmoxxx.github.io'){
  if(v1)v1.href='https://xxxelmoxxx.github.io/pomo-timer/classic.html';
 }
 $('loopToggle').addEventListener('change',()=>setAutoLoop($('loopToggle').checked));$('autoAdvance').addEventListener('change',()=>setAutoLoop($('autoAdvance').checked));
-renderTracks();loadRepoTracks();$('volume').value=settings.volume;$('volumeLabel').textContent=settings.volume+'%';$('intention').value=settings.intention;$('handoffHint').hidden=!settings.handoff;$('handoffHint').textContent=settings.handoff?'前回のメモ：'+settings.handoff:'';$('musicWork').checked=settings.musicWork;$('musicBreak').checked=settings.musicBreak;setInputs();applyTheme(settings.theme);syncPresetButtons();setMusicTrack();draw();
+renderTracks();loadRepoTracks();$('musicRepeat').value=String(settings.musicRepeats);$('volume').value=settings.volume;$('volumeLabel').textContent=settings.volume+'%';$('intention').value=settings.intention;$('handoffHint').hidden=!settings.handoff;$('handoffHint').textContent=settings.handoff?'前回のメモ：'+settings.handoff:'';$('musicWork').checked=settings.musicWork;$('musicBreak').checked=settings.musicBreak;setInputs();applyTheme(settings.theme);syncPresetButtons();setMusicTrack();draw();
 document.querySelectorAll('[data-theme]').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.theme)));
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>choosePreset(Number(b.dataset.preset))));
 $('offNow').addEventListener('click',()=>openOffGuide('manual'));$('offFloating').addEventListener('click',()=>openOffGuide('manual'));$('takeBreak').addEventListener('click',chooseBreakFromOff);$('endDay').addEventListener('click',finishDay);$('continueWork').addEventListener('click',continueFromOff);$('dismissOff').addEventListener('click',dismissOff);$('closeFinished').addEventListener('click',closeFinished);$('reopenFinished').addEventListener('click',continueFromOff);$('reopenQuiet').addEventListener('click',continueFromOff);$('extendRest').addEventListener('click',extendRest);$('handoff').addEventListener('input',()=>{settings.handoff=$('handoff').value;$('handoffHint').hidden=!settings.handoff;$('handoffHint').textContent=settings.handoff?'前回のメモ：'+settings.handoff:'';save()});$('offOverlay').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();dismissOff()}if(e.key==='Tab'){const f=Array.from($('offOverlay').querySelectorAll('button:not([disabled]),input:not([disabled])')).filter(x=>x.getClientRects().length);if(f.length){const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});$('start').addEventListener('click',startTimer);$('reset').addEventListener('click',resetTimer);$('next').addEventListener('click',()=>{stop();advance()});$('chooseFocus').addEventListener('click',()=>choose('work'));$('chooseBreak').addEventListener('click',()=>choose('break'));$('apply').addEventListener('click',applySettings);$('testChime').addEventListener('click',()=>{settings.chime=$('chime').value;sound();save()});
 $('goSettings').addEventListener('click',()=>{$('advanced').open=true;$('settingsPanel').scrollIntoView({behavior:'smooth',block:'center'})});
 $('intention').addEventListener('input',()=>{settings.intention=$('intention').value;save()});
 $('music').addEventListener('change',()=>{settings.track=$('music').value;save();setMusicTrack();$('audioHint').textContent=settings.track?'▶ を押すとBGMを再生します。':'無音で集中できます。'});
+ $('musicRepeat').addEventListener('change',()=>{settings.musicRepeats=Number($('musicRepeat').value);trackCompletedPlays=0;save();renderMusicRepeatStatus();});
+ player.addEventListener('ended',advanceMusicOnEnd);
 $('musicToggle').addEventListener('click',()=>{if(!settings.track){$('audioHint').textContent='先に音楽を選んでください。';return}if(player.paused)playMusic();else{player.pause();$('audioHint').textContent='BGMは停止中です。';syncMusicButton()}});
 
 function audioClock(seconds){if(!Number.isFinite(seconds))return '0:00';const n=Math.max(0,Math.floor(seconds));return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`}
