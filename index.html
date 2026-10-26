@@ -438,6 +438,14 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
   .theme-holo .page {--glass:rgba(8,26,47,.30)}
   .theme-geometry .page {--glass:rgba(255,250,253,.30)}
 }
+
+/* v3.1: Visible loop control; text remains opaque over scenic background. */
+.loop-mode-control{display:flex;align-items:center;justify-content:center;gap:10px;margin:-7px auto 18px;padding:10px 12px;border:1px solid var(--edge);background:var(--glass,rgba(255,252,247,.65));border-radius:14px;max-width:390px;cursor:pointer;color:var(--text);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.loop-mode-control input{width:18px;height:18px;flex:none;accent-color:var(--accent);cursor:pointer}
+.loop-mode-control span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.loop-mode-control strong{font-size:12px;line-height:1.5}
+.loop-mode-control small{font-size:10px;line-height:1.5;color:var(--muted)}
+.loop-mode-control:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body class="theme-cafe">
@@ -558,6 +566,7 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
   <div class="timer-note" id="note" aria-live="polite">まずは15分。途中でやめても、やった分は残ります。</div>
   <div class="dial-wrap" role="timer" aria-label="残り時間"><div class="dial-atmosphere" aria-hidden="true"><span class="atmosphere-orbit"></span><span class="atmosphere-dot"></span><span class="atmosphere-leaf">❧</span><span class="atmosphere-star">✧</span></div><div class="dial-shadow" aria-hidden="true"></div><div class="dial-marker" aria-hidden="true"></div><div class="dial-progress" id="dial"><div class="dial-face"><span class="phase-label" id="phaseName">FOCUS TIME</span><span class="time" id="time">15:00</span><span class="mini-sub" id="bottomText">ゆっくり、ひとつずつ</span></div></div></div>
   <div class="timer-controls"><button class="small-circle" id="reset" aria-label="現在の時間をリセット" title="リセット" type="button">↺</button><button class="primary" id="start" type="button">▶ はじめる</button><button class="small-circle" id="next" aria-label="ここまでで切り替える" title="ここまでで切り替える" type="button">↪</button></div>
+  <label class="loop-mode-control" for="loopToggle"><input id="loopToggle" type="checkbox" checked><span><strong>作業と休憩を自動で繰り返す</strong><small>「いま、オフにする」でいつでも停止できます</small></span></label>
   <section class="off-switch-area" aria-label="オフスイッチ">
     <div class="off-label"><span class="off-pulse" aria-hidden="true"></span> OFF SWITCH <span id="offModeLabel">休むきっかけを、自動でつくります</span></div>
     <button id="offNow" class="off-now" type="button"><span class="off-now-icon" aria-hidden="true">☾</span><span class="off-now-main">いま、オフにする<small>作業を止めて、音楽を消して、ひと息</small></span><span aria-hidden="true">↗</span></button>
@@ -577,7 +586,7 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
   <section class="panel side-card"><div class="side-title"><h2>音のある時間</h2><span class="emoji" aria-hidden="true">♫</span></div><p class="side-desc">いつものBGMをそのまま選べます。無音でもOK。</p><div class="audio-line"><select class="sound-select" id="music" aria-label="BGMの選択"><option value="">音楽なし</option></select><button id="musicToggle" class="sound-btn" type="button" aria-label="BGMを再生" aria-pressed="false">▶</button></div><div class="range-row audio-seek"><span>再生位置</span><input id="musicSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="BGMの再生位置"><span id="musicTime">0:00 / 0:00</span></div><div class="range-row"><span>音量</span><input id="volume" type="range" min="0" max="100" value="20" aria-label="BGMの音量"><span id="volumeLabel">20%</span></div><div class="audio-options"><label><input id="musicWork" type="checkbox" checked>集中中に再生</label><label><input id="musicBreak" type="checkbox">休憩中も再生</label></div><p class="audio-hint" id="audioHint" role="status">音楽は選んでから再生できます。</p><audio id="player" preload="none" loop></audio></section>
   <section class="panel side-card"><div class="side-title"><h2>今日の、できたこと</h2><span class="emoji" aria-hidden="true">✳</span></div><div class="stats"><div class="stat"><span class="num" id="count">0</span><small>着手した回数</small></div><div class="stat"><span class="num" id="minutes">0<span style="font-size:13px">分</span></span><small>積み重ねた集中時間</small></div></div><p class="gentle" id="gentle">何もできない日があっても、記録はその日の評価ではありません。</p></section>
   <section class="panel side-card" id="settingsPanel"><div class="side-title"><h2>自分好みに整える</h2><span class="emoji" aria-hidden="true">⌘</span></div><p class="side-desc">まずは何も変えずに使えます。必要なときだけ調整してください。</p>
-    <details class="settings-wrap" id="advanced"><summary>時間・切替音・詳細設定を開く</summary><div class="settings-grid"><div class="form-row"><label for="workInput">集中（分）</label><input id="workInput" type="number" min="1" max="180" value="15"></div><div class="form-row"><label for="breakInput">休憩（分）</label><input id="breakInput" type="number" min="1" max="60" value="5"></div><div class="form-row"><label for="longInput">長休憩（分）</label><input id="longInput" type="number" min="1" max="60" value="15"></div><div class="form-row"><label for="longEvery">長休憩の頻度（セット）</label><input id="longEvery" type="number" min="0" max="12" value="4"></div><div class="form-row"><label for="chime">切り替え音</label><select id="chime"><option value="soft">やさしい音</option><option value="bell">澄んだ音</option><option value="off">鳴らさない</option></select></div><div class="form-row"><label for="dualB">作業Bの時間（分）</label><input id="dualB" type="number" min="1" max="180" value="15"></div></div><div class="toggles"><label><input id="dualMode" type="checkbox">作業A → 作業B → 休憩を使う</label><label><input id="offGuideEnabled" type="checkbox" checked>集中が終わったら、オフの案内を表示する（初期設定はON）</label><label><input id="autoAdvance" type="checkbox">次の時間を自動で始める（オフガイドON時は無効）</label></div><div class="settings-buttons"><button id="apply" class="action-secondary" type="button">時間設定を適用</button><button id="testChime" class="action-secondary" type="button">切替音を試す</button></div><p class="audio-hint" id="settingsHint" role="status">設定を変更すると、進行中のタイマーは初期状態に戻ります。</p></details>
+    <details class="settings-wrap" id="advanced"><summary>時間・切替音・詳細設定を開く</summary><div class="settings-grid"><div class="form-row"><label for="workInput">集中（分）</label><input id="workInput" type="number" min="1" max="180" value="15"></div><div class="form-row"><label for="breakInput">休憩（分）</label><input id="breakInput" type="number" min="1" max="60" value="5"></div><div class="form-row"><label for="longInput">長休憩（分）</label><input id="longInput" type="number" min="1" max="60" value="15"></div><div class="form-row"><label for="longEvery">長休憩の頻度（セット）</label><input id="longEvery" type="number" min="0" max="12" value="4"></div><div class="form-row"><label for="chime">切り替え音</label><select id="chime"><option value="soft">やさしい音</option><option value="bell">澄んだ音</option><option value="off">鳴らさない</option></select></div><div class="form-row"><label for="dualB">作業Bの時間（分）</label><input id="dualB" type="number" min="1" max="180" value="15"></div></div><div class="toggles"><label><input id="dualMode" type="checkbox">作業A → 作業B → 休憩を使う</label><label><input id="offGuideEnabled" type="checkbox" checked>自動ループOFFのとき、集中終了後にオフの案内を表示する</label><label><input id="autoAdvance" type="checkbox" checked>作業・休憩を自動で繰り返す（画面のスイッチと連動）</label></div><div class="settings-buttons"><button id="apply" class="action-secondary" type="button">時間設定を適用</button><button id="testChime" class="action-secondary" type="button">切替音を試す</button></div><p class="audio-hint" id="settingsHint" role="status">設定を変更すると、進行中のタイマーは初期状態に戻ります。</p></details>
   </section>
 </div>
 </main>
@@ -610,13 +619,13 @@ body.theme-geometry{--bg:#f4f2fa;--surface:#fffdfd;--surface2:#f5f0fa;--text:#3b
     </div>
   </div>
   <button id="offFloating" class="off-floating" type="button" aria-label="いつでもオフにする">☾ オフにする</button>
-  <p class="credit">ひと息ポモ v3 · 6つの景色とOFFスイッチ / 2026.10<br>記録・設定はこのブラウザ内に保存。音楽には同じリポジトリの audio フォルダ内の音源を使用します。</p>
+  <p class="credit">ひと息ポモ v3.1 · 6つの景色とOFFスイッチ / 2026.10<br>記録・設定はこのブラウザ内に保存。音楽には同じリポジトリの audio フォルダ内の音源を使用します。</p>
 </div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 if(!(location.hostname==='xxxelmoxxx.github.io' && location.pathname.startsWith('/pomo-timer/'))){
-  document.querySelector('[data-legacy="v2"]').href='https://xxxelmoxxx.github.io/pomo-timer/';
+  document.querySelector('[data-legacy="v2"]').href='https://xxxelmoxxx.github.io/pomo-timer/v2.html';
   document.querySelector('[data-legacy="v1"]').href='https://xxxelmoxxx.github.io/pomo-timer/classic.html';
 }
 
@@ -627,7 +636,10 @@ const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMon
 const clamp=(value,min,max,def)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,Math.round(n))):def};
 function getSaved(){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}}
 const saved=getSaved();
-const settings={work:15,rest:5,long:15,longEvery:4,dualB:15,dual:false,auto:false,offGuide:true,closedDay:'',handoff:'',chime:'soft',theme:'cafe',preset:15,intention:'',track:'',volume:20,musicWork:true,musicBreak:false,...(saved.settings||{})};
+const settings={work:15,rest:5,long:15,longEvery:4,dualB:15,dual:false,auto:true,offGuide:true,closedDay:'',handoff:'',chime:'soft',theme:'cafe',preset:15,intention:'',track:'',volume:20,musicWork:true,musicBreak:false,...(saved.settings||{})};
+// v3.1 migration: older versions stored auto:false as the default. Enable the intended
+// loop once, then respect the user's explicit on/off preference on subsequent visits.
+if(!settings.loopPreferenceV31){settings.auto=true;settings.loopPreferenceV31=true;}
 if(!['cafe','botanical','nordic','luxury','holo','geometry'].includes(settings.theme))settings.theme='cafe';
 if(!tracks.includes(settings.track))settings.track='';
 const stats=(saved.stats?.day===today())?{...saved.stats}:{day:today(),starts:0,seconds:0};
@@ -643,7 +655,7 @@ function currentWork(){return timer.phase==='work'||timer.phase==='workB'}
 function duration(phase){if(phase==='workB')return settings.dualB*60;if(phase==='work')return settings.work*60;if(phase==='long')return settings.long*60;return settings.rest*60}
 function label(phase){return phase==='workB'?'作業B':phase==='work'?(settings.dual?'作業A':'集中中'):phase==='long'?'長休憩':'休憩中'}
 function note(t){$('note').textContent=t}
-function draw(){const remaining=currentSec(),pct=timer.total?Math.max(0,Math.min(1,remaining/timer.total)):1;document.documentElement.style.setProperty('--remaining-angle',`${pct*360}deg`);$('time').textContent=format(remaining);$('phaseName').textContent=currentWork()?(timer.phase==='workB'?'FOCUS · B':'FOCUS TIME'):'REST TIME';$('bottomText').textContent=currentWork()?'ゆっくり、ひとつずつ':'からだをゆるめる時間';$('cycle').textContent=`${timer.round}セット目`;if(timer.running){$('start').textContent='Ⅱ いったん止める'}else{$('start').textContent=(remaining<timer.total&&remaining>0)?'▶ 再開する':currentWork()?'▶ はじめる':'▶ 休んでみる'}$('chooseFocus').classList.toggle('active',currentWork());$('chooseBreak').classList.toggle('active',!currentWork());$('reset').disabled=false;$('offModeLabel').textContent=settings.closedDay===today()?'今日は終了済み。再開は自分で決められます':settings.offGuide?'集中終了で、自動的にオフをご案内':'いつでもオフボタンを使えます';$('restActions').hidden=currentWork();document.title=`${format(remaining)} · ${label(timer.phase)} | ひと息ポモ`;rollover();$('count').textContent=stats.starts;$('minutes').innerHTML=`${Math.round(stats.seconds/6)/10}<span style="font-size:13px">分</span>`;if(stats.starts>0){$('gentle').textContent='着手できたことも、小さく積み重ねた時間も、ちゃんと残っています。'}else{$('gentle').textContent='何もできない日があっても、記録はその日の評価ではありません。'}}
+function draw(){const remaining=currentSec(),pct=timer.total?Math.max(0,Math.min(1,remaining/timer.total)):1;document.documentElement.style.setProperty('--remaining-angle',`${pct*360}deg`);$('time').textContent=format(remaining);$('phaseName').textContent=currentWork()?(timer.phase==='workB'?'FOCUS · B':'FOCUS TIME'):'REST TIME';$('bottomText').textContent=currentWork()?'ゆっくり、ひとつずつ':'からだをゆるめる時間';$('cycle').textContent=`${timer.round}セット目`;if(timer.running){$('start').textContent='Ⅱ いったん止める'}else{$('start').textContent=(remaining<timer.total&&remaining>0)?'▶ 再開する':currentWork()?'▶ はじめる':'▶ 休んでみる'}$('chooseFocus').classList.toggle('active',currentWork());$('chooseBreak').classList.toggle('active',!currentWork());$('reset').disabled=false;$('offModeLabel').textContent=settings.closedDay===today()?'今日は終了済み。再開は自分で決められます':settings.auto?'作業と休憩を自動で繰り返します':settings.offGuide?'集中終了で、オフをご案内':'いつでもオフボタンを使えます';$('restActions').hidden=currentWork();document.title=`${format(remaining)} · ${label(timer.phase)} | ひと息ポモ`;rollover();$('count').textContent=stats.starts;$('minutes').innerHTML=`${Math.round(stats.seconds/6)/10}<span style="font-size:13px">分</span>`;if(stats.starts>0){$('gentle').textContent='着手できたことも、小さく積み重ねた時間も、ちゃんと残っています。'}else{$('gentle').textContent='何もできない日があっても、記録はその日の評価ではありません。'}}
 function incrementFocus(){if(!currentWork())return;const elapsed=Math.max(0,timer.total-currentSec());const difference=Math.max(0,elapsed-timer.logged);if(difference>0){rollover();stats.seconds+=difference;timer.logged=elapsed;save()}}
 function stop(){if(timer.running){timer.remaining=currentSec();timer.running=false;timer.endAt=0}draw()}
 function switchTo(phase,notice){stop();timer.phase=phase;timer.total=duration(phase);timer.remaining=timer.total;timer.running=false;timer.endAt=0;timer.started=false;timer.logged=0;timer.notified=false;if(notice)note(notice);draw();syncAudio()}
@@ -652,8 +664,9 @@ function advance(fromCompletion=false){
  if(timer.phase==='work'&&settings.dual){switchTo('workB','前半おつかれさま。いったん手を止める時間です。')}
  else if(wasWork){const next=(settings.longEvery>0&&timer.round%settings.longEvery===0)?'long':'break';n='ここまで取り組めました。今は、休む時間です。';switchTo(next,n)}
  else{timer.round+=1;switchTo('work','休憩が終わりました。再開は、自分で決められます。')}
+ // The manual OFF button always stops. Natural completion follows the loop setting.
+ if(settings.auto){startTimer();return}
  if(wasWork&&settings.offGuide){openOffGuide(fromCompletion?'complete':'manual');return}
- if(settings.auto&&!settings.offGuide)startTimer();
 }
 function sound(){if(settings.chime==='off')return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext)audioContext=new AC();audioContext.resume().catch(()=>{});const now=audioContext.currentTime;const notes=settings.chime==='bell'?[659.25,783.99]:[523.25,659.25];notes.forEach((freq,i)=>{const osc=audioContext.createOscillator(),vol=audioContext.createGain();osc.type='sine';osc.frequency.value=freq;const begin=now+i*.16;vol.gain.setValueAtTime(.0001,begin);vol.gain.exponentialRampToValueAtTime(.04,begin+.04);vol.gain.exponentialRampToValueAtTime(.0001,begin+.36);osc.connect(vol);vol.connect(audioContext.destination);osc.start(begin);osc.stop(begin+.4)})}catch(e){}}
 function tick(){if(!timer.running)return;if(currentSec()<=0){timer.remaining=0;timer.running=false;timer.endAt=0;incrementFocus();if(!document.hidden)sound();advance(true)}else{draw()}}
@@ -684,8 +697,9 @@ function applyTheme(theme){
  document.querySelectorAll('[data-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.theme===theme)));
  save();
 }
-function setInputs(){$('workInput').value=settings.work;$('breakInput').value=settings.rest;$('longInput').value=settings.long;$('longEvery').value=settings.longEvery;$('dualB').value=settings.dualB;$('dualMode').checked=settings.dual;$('offGuideEnabled').checked=settings.offGuide;$('autoAdvance').checked=settings.auto;$('chime').value=settings.chime}
-function applySettings(){if(timer.running){note('設定を反映する前に、時間を一時停止してください。');$('settingsHint').textContent='一時停止してから、もう一度設定を適用してください。';return}incrementFocus();settings.work=clamp($('workInput').value,1,180,15);settings.rest=clamp($('breakInput').value,1,60,5);settings.long=clamp($('longInput').value,1,60,15);settings.longEvery=clamp($('longEvery').value,0,12,4);settings.dualB=clamp($('dualB').value,1,180,15);settings.dual=$('dualMode').checked;settings.offGuide=$('offGuideEnabled').checked;settings.auto=$('autoAdvance').checked;settings.chime=$('chime').value;settings.preset=0;setInputs();syncPresetButtons();timer.round=1;switchTo('work','時間設定を変更しました。新しいペースで始めましょう。');$('settingsHint').textContent='反映しました。';save()}
+function setInputs(){$('workInput').value=settings.work;$('breakInput').value=settings.rest;$('longInput').value=settings.long;$('longEvery').value=settings.longEvery;$('dualB').value=settings.dualB;$('dualMode').checked=settings.dual;$('offGuideEnabled').checked=settings.offGuide;$('autoAdvance').checked=settings.auto;$('loopToggle').checked=settings.auto;$('chime').value=settings.chime}
+function setAutoLoop(enabled){settings.auto=!!enabled;settings.loopPreferenceV31=true;$('autoAdvance').checked=settings.auto;$('loopToggle').checked=settings.auto;save();draw()}
+function applySettings(){if(timer.running){note('設定を反映する前に、時間を一時停止してください。');$('settingsHint').textContent='一時停止してから、もう一度設定を適用してください。';return}incrementFocus();settings.work=clamp($('workInput').value,1,180,15);settings.rest=clamp($('breakInput').value,1,60,5);settings.long=clamp($('longInput').value,1,60,15);settings.longEvery=clamp($('longEvery').value,0,12,4);settings.dualB=clamp($('dualB').value,1,180,15);settings.dual=$('dualMode').checked;settings.offGuide=$('offGuideEnabled').checked;settings.auto=$('autoAdvance').checked;settings.loopPreferenceV31=true;$('loopToggle').checked=settings.auto;settings.chime=$('chime').value;settings.preset=0;setInputs();syncPresetButtons();timer.round=1;switchTo('work','時間設定を変更しました。新しいペースで始めましょう。');$('settingsHint').textContent='反映しました。';save()}
 function renderTracks(){const list=$('music');list.replaceChildren();const none=document.createElement('option');none.value='';none.textContent='音楽なし';list.append(none);tracks.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f.replace(/_2(?=\.mp3$)/,'').replace(/_/g,' ').replace(/\.mp3$/,'');list.append(o)});list.value=settings.track}
 async function loadRepoTracks(){try{const repoSite=location.hostname==='xxxelmoxxx.github.io'&&location.pathname.startsWith('/pomo-timer/');const listUrl=repoSite?'audio/bgm-list.json':'https://xxxelmoxxx.github.io/pomo-timer/audio/bgm-list.json';const response=await fetch(listUrl,{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);const json=await response.json();const filenames=Array.isArray(json)?json:(Array.isArray(json?.files)?json.files:[]);const valid=filenames.filter(name=>typeof name==='string'&&/^[^/\\]+\.mp3$/i.test(name));if(valid.length===0)return;const current=JSON.stringify(tracks);if(current===JSON.stringify(valid))return;tracks.splice(0,tracks.length,...valid);if(settings.track&&!tracks.includes(settings.track)){settings.track='';setMusicTrack();save()}renderTracks()}catch(e){console.info('BGM一覧は試作版の内蔵リストを使用します:',e?.message||e)}}
 
@@ -745,9 +759,10 @@ function extendRest(){if(currentWork())return; const secs=currentSec()+300;timer
 if(location.hostname!=='xxxelmoxxx.github.io'){
  const v2=document.querySelector('[data-legacy="v2"]');
  const v1=document.querySelector('[data-legacy="v1"]');
- if(v2)v2.href='https://xxxelmoxxx.github.io/pomo-timer/';
+ if(v2)v2.href='https://xxxelmoxxx.github.io/pomo-timer/v2.html';
  if(v1)v1.href='https://xxxelmoxxx.github.io/pomo-timer/classic.html';
 }
+$('loopToggle').addEventListener('change',()=>setAutoLoop($('loopToggle').checked));$('autoAdvance').addEventListener('change',()=>setAutoLoop($('autoAdvance').checked));
 renderTracks();loadRepoTracks();$('volume').value=settings.volume;$('volumeLabel').textContent=settings.volume+'%';$('intention').value=settings.intention;$('handoffHint').hidden=!settings.handoff;$('handoffHint').textContent=settings.handoff?'前回のメモ：'+settings.handoff:'';$('musicWork').checked=settings.musicWork;$('musicBreak').checked=settings.musicBreak;setInputs();applyTheme(settings.theme);syncPresetButtons();setMusicTrack();draw();
 document.querySelectorAll('[data-theme]').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.theme)));
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>choosePreset(Number(b.dataset.preset))));
