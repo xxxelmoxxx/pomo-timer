@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f8f7f4">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="動画から好きな瞬間を写真に。動画は端末内だけで処理します。">
+  <title>この瞬間の写真 | Moment</title>
+  <style>
+    :root {color-scheme:light; --ink:#242631;--muted:#767783;--line:#e5e5e9;--paper:#f8f7f4;--white:#fff;--accent:#5869dc;--accent2:#eff0ff;--shadow:0 12px 38px rgba(35,43,70,.07)}
+    *{box-sizing:border-box}html{height:100%}body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;color:var(--ink);background:var(--paper);-webkit-text-size-adjust:100%}
+    button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #8994f5;outline-offset:2px}
+    .shell{max-width:680px;margin:0 auto;padding:calc(23px + env(safe-area-inset-top)) 17px calc(40px + env(safe-area-inset-bottom))}
+    .top{display:flex;align-items:center;gap:12px;margin-bottom:5px}.mark{width:42px;height:42px;border-radius:15px;background:#e8eaff;display:grid;place-items:center;color:#4e5fd1}
+    h1{font-size:23px;letter-spacing:-.04em;margin:0;font-weight:790}.subtitle{font-size:13px;color:var(--muted);margin:5px 0 23px;line-height:1.7}
+    .panel{background:var(--white);border:1px solid #ebeaf0;border-radius:22px;padding:17px;box-shadow:var(--shadow);margin-bottom:15px}
+    .sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}.sectionhead h2{font-size:14px;letter-spacing:.01em;margin:0}.tiny{font-size:11px;color:var(--muted)}
+    .pick{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 14px;border-radius:12px;background:var(--accent2);color:#4050c1;font-weight:750;border:1px dashed #cbd0fa;min-height:48px;cursor:pointer}
+    .pick input{position:absolute;width:1px;height:1px;opacity:0}.pick svg{flex:none}.hint{font-size:12px;color:var(--muted);line-height:1.7;margin:10px 0 0;overflow-wrap:anywhere}
+    .view{position:relative;background:#171922;border-radius:14px;overflow:hidden;display:grid;place-items:center;min-height:222px;aspect-ratio:4 / 3}
+    .view video{display:none;width:100%;height:100%;object-fit:contain;max-height:450px;background:#15151b}
+    .view.ready{aspect-ratio:auto;min-height:180px}.view.ready video{display:block}
+    .empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;color:#e8e9f3;text-align:center;font-size:13px}.empty svg{opacity:.75}
+    .controls{margin-top:16px}.timeline{width:100%;accent-color:var(--accent);height:26px;touch-action:pan-x;cursor:pointer;margin:2px 0}
+    .time{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}.tools{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:13px;flex-wrap:wrap}
+    .tool{border:1px solid var(--line);background:#fff;border-radius:12px;min-width:66px;padding:10px 9px;font-size:12px;font-weight:700}.tool.main{background:var(--accent2);color:#3f4fc4;border-color:#d7dcfa;min-width:81px}
+    .capture{width:100%;margin-top:17px;background:var(--accent);color:white;border:0;border-radius:15px;padding:15px;font-size:15px;font-weight:780;box-shadow:0 5px 16px #5967dc31}
+    .capture:disabled{box-shadow:none}.result{display:none}.result.show{display:block}.preview{background:#f1f0f5;border-radius:13px;text-align:center;overflow:hidden;padding:8px}
+    .preview img{display:block;max-width:100%;max-height:440px;object-fit:contain;margin:auto;border-radius:7px}.actionrow{display:flex;gap:9px;margin-top:13px}.action{flex:1;min-width:0;border:1px solid #d5d8ee;border-radius:12px;padding:13px 9px;background:#fff;color:#4653ad;font-size:13px;font-weight:750;text-decoration:none;text-align:center}.action.primary{background:#eeefff;border-color:#dadfff}
+    .note{border-radius:12px;background:#f8f8fe;padding:12px;font-size:12px;line-height:1.8;color:#616278;margin-top:13px}.status{font-size:12px;line-height:1.6;min-height:0;margin:8px 0 0;color:#5c6484}.status.error{color:#ae3b4c}
+    footer{font-size:11px;text-align:center;color:#898993;line-height:1.8;margin-top:22px}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div class="top">
+      <div class="mark" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 5 9.5 2.8h5L16 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      <h1>この瞬間の写真</h1>
+    </div>
+    <p class="subtitle">動画の中の「いま！」を、1枚の写真に。</p>
+  </header>
+
+  <section class="panel" aria-labelledby="chooseTitle">
+    <div class="sectionhead"><h2 id="chooseTitle">01　動画を選ぶ</h2><span class="tiny">iPhone対応</span></div>
+    <label class="pick" for="file"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>写真ライブラリから動画を選択
+      <input id="file" type="file" accept="video/*,.mov,.mp4,.m4v" aria-label="動画ファイルを選ぶ">
+    </label>
+    <p class="hint" id="filename">動画は外部送信しません。この端末内で処理します。</p>
+  </section>
+
+  <section class="panel" aria-labelledby="adjustTitle">
+    <div class="sectionhead"><h2 id="adjustTitle">02　好きな瞬間を選ぶ</h2><span id="resolution" class="tiny"></span></div>
+    <div id="view" class="view">
+      <div class="empty" id="empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m9 8 7 4-7 4z"/></svg>ここに動画が表示されます</div>
+      <video id="video" playsinline webkit-playsinline preload="auto" aria-label="切り出す動画"></video>
+    </div>
+    <div class="controls">
+      <input id="timeline" class="timeline" type="range" min="0" max="1" step="0.001" value="0" disabled aria-label="動画を移動">
+      <div class="time"><span id="now">00:00.00</span><span id="total">00:00.00</span></div>
+      <div class="tools">
+        <button class="tool" id="prev" disabled aria-label="0.1秒戻る">−0.1秒</button>
+        <button class="tool main" id="toggle" disabled aria-label="再生または停止">▶ 再生</button>
+        <button class="tool" id="next" disabled aria-label="0.1秒進む">＋0.1秒</button>
+      </div>
+      <p class="hint">バーを動かすか、0.1秒ずつ調整できます。※厳密なフレーム単位の精度は動画形式・端末に依存します。</p>
+      <button id="capture" class="capture" disabled>この瞬間を写真にする</button>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="panel result" id="result" aria-labelledby="resultTitle">
+    <div class="sectionhead"><h2 id="resultTitle">03　写真を保存する</h2><span id="photoInfo" class="tiny">JPEG</span></div>
+    <div class="preview"><img id="photo" alt="動画から切り出した写真"></div>
+    <div class="actionrow">
+      <button class="action primary" id="share" type="button">共有メニューを開く</button>
+      <a class="action" id="download" href="#" download="moment.jpg">画像をダウンロード</a>
+    </div>
+    <p class="note"><strong>iPhoneの「写真」に保存したいとき</strong><br>上の画像を長押しして「写真に保存」または「画像を保存」を選んでください。共有メニューに保存項目がある場合は、そちらからも保存できます。<br>※「ダウンロード」は「ファイル」に保存される場合があります。</p>
+  </section>
+  <footer>広告なし・登録不要・外部アップロードなし<br>試作版 v1.0 ／ Safariでの実機確認を推奨</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const fileInput = $('file'), video = $('video'), view = $('view'), empty = $('empty');
+  const timeline = $('timeline'), now = $('now'), total = $('total');
+  const prev = $('prev'), next = $('next'), toggle = $('toggle'), capture = $('capture');
+  const status = $('status'), result = $('result'), photo = $('photo');
+  const share = $('share'), download = $('download');
+  let videoUrl = null, photoUrl = null, photoBlob = null;
+
+  const formatTime = (value) => {
+    if (!Number.isFinite(value) || value < 0) return '00:00.00';
+    const mins = Math.floor(value / 60);
+    const secs = Math.floor(value % 60);
+    const centis = Math.floor((value - Math.floor(value)) * 100);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centis).padStart(2, '0')}`;
+  };
+  const message = (value, error = false) => {
+    status.textContent = value;
+    status.classList.toggle('error', error);
+  };
+  const setReady = (ready) => {
+    for (const control of [timeline, prev, next, toggle, capture]) control.disabled = !ready;
+    if (!ready) toggle.textContent = '▶ 再生';
+  };
+  const sync = () => {
+    const duration = Number.isFinite(video.duration) ? video.duration : 0;
+    const position = Math.max(0, video.currentTime || 0);
+    timeline.max = String(duration || 1);
+    if (!timeline.matches(':active')) timeline.value = String(Math.min(position, duration || 1));
+    now.textContent = formatTime(position);
+    total.textContent = formatTime(duration);
+  };
+  const clearResult = () => {
+    result.classList.remove('show');
+    photo.removeAttribute('src');
+    photoBlob = null;
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    photoUrl = null;
+    download.removeAttribute('href');
+  };
+  const reset = () => {
+    video.pause(); setReady(false); clearResult();
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    videoUrl = null;
+    video.removeAttribute('src'); video.load();
+    video.style.display = 'none'; view.classList.remove('ready'); empty.hidden = false;
+    $('resolution').textContent = '';
+    now.textContent = total.textContent = '00:00.00'; timeline.value = 0;
+    message('');
+  };
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    reset();
+    $('filename').textContent = `${file.name} ・ ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+    videoUrl = URL.createObjectURL(file);
+    video.src = videoUrl;
+    video.load();
+    message('動画を読み込んでいます…');
+  });
+  video.addEventListener('loadedmetadata', () => {
+    if (!video.videoWidth || !video.videoHeight || !Number.isFinite(video.duration) || video.duration <= 0) {
+      message('動画の情報を読み取れませんでした。別の動画でお試しください。', true);
+      return;
+    }
+    video.style.display = 'block'; view.classList.add('ready'); empty.hidden = true;
+    $('resolution').textContent = `${video.videoWidth} × ${video.videoHeight}`;
+    setReady(true); sync();
+    message('再生・停止やバーで切り出したい場面を選んでください。');
+  });
+  video.addEventListener('error', () => {
+    if (videoUrl) message('この動画は再生できませんでした。iPhoneで再生できるMOVまたはMP4をお試しください。', true);
+  });
+  video.addEventListener('timeupdate', sync);
+  video.addEventListener('seeked', sync);
+  video.addEventListener('play', () => { toggle.textContent = 'Ⅱ 停止'; });
+  video.addEventListener('pause', () => { toggle.textContent = '▶ 再生'; });
+  video.addEventListener('ended', () => { toggle.textContent = '▶ 再生'; sync(); });
+  timeline.addEventListener('input', () => {
+    if (timeline.disabled) return;
+    video.pause();
+    video.currentTime = Number(timeline.value);
+    now.textContent = formatTime(Number(timeline.value));
+  });
+  const step = (seconds) => {
+    if (toggle.disabled) return;
+    video.pause();
+    const limit = Math.max(0, (video.duration || 0) - 0.001);
+    video.currentTime = Math.min(limit, Math.max(0, (video.currentTime || 0) + seconds));
+    sync();
+  };
+  prev.addEventListener('click', () => step(-0.1));
+  next.addEventListener('click', () => step(0.1));
+  toggle.addEventListener('click', async () => {
+    if (video.paused) {
+      try { await video.play(); message(''); }
+      catch (err) { message('再生できませんでした。別の動画をお試しください。', true); }
+    } else video.pause();
+  });
+  video.addEventListener('click', () => { if (!toggle.disabled) toggle.click(); });
+
+  const whenSeeked = () => new Promise((resolve, reject) => {
+    if (!video.seeking) { resolve(); return; }
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('seek timeout')); }, 3500);
+    const finish = () => { cleanup(); resolve(); };
+    const cleanup = () => { clearTimeout(timeout); video.removeEventListener('seeked', finish); };
+    video.addEventListener('seeked', finish, { once: true });
+  });
+  capture.addEventListener('click', async () => {
+    if (capture.disabled) return;
+    capture.disabled = true;
+    video.pause();
+    message('写真を切り出しています…');
+    try {
+      await whenSeeked();
+      if (!video.videoWidth || !video.videoHeight || video.readyState < 2) throw new Error('frame not ready');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d', { alpha:false });
+      if (!context) throw new Error('canvas unavailable');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('image export failed')), 'image/jpeg', 0.95);
+      });
+      clearResult();
+      photoBlob = blob;
+      photoUrl = URL.createObjectURL(blob);
+      photo.src = photoUrl;
+      const filename = `moment_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`;
+      download.href = photoUrl;
+      download.download = filename;
+      $('photoInfo').textContent = `${canvas.width} × ${canvas.height} / JPEG`;
+      result.classList.add('show');
+      message('写真ができました。下の画像を長押しすると「写真」に保存できます。');
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      console.error('Capture error', err);
+      message('画像を取り出せませんでした。動画をいったん再生・停止してから再度お試しください。', true);
+    } finally {
+      capture.disabled = !videoUrl || !video.videoWidth;
+    }
+  });
+  share.addEventListener('click', async () => {
+    if (!photoBlob) return;
+    const filename = download.download || 'moment.jpg';
+    const file = new File([photoBlob], filename, { type:'image/jpeg' });
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files:[file] }))) {
+      try { await navigator.share({ files:[file] }); }
+      catch (err) { if (err.name !== 'AbortError') message('共有できませんでした。画像の長押し、またはダウンロードをご利用ください。', true); }
+    } else {
+      message('このブラウザーでは共有メニューを利用できません。画像を長押しして保存してください。');
+    }
+  });
+  window.addEventListener('pagehide', () => { if (videoUrl) URL.revokeObjectURL(videoUrl); if (photoUrl) URL.revokeObjectURL(photoUrl); });
+  setReady(false);
+})();
+</script>
+</body>
+</html>
