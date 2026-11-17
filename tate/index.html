@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="写真を1枚ずつトリミングして縦につなぐ。画像は端末内で処理され、外部へ送信されません。">
+<meta name="description" content="写真を1枚ずつトリミングして縦にも横にもつなぐ。画像は端末内で処理され、外部へ送信されません。">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f8f7f4">
-<title>たてつなぎ | 写真を切って縦につなぐ</title>
+<title>たてつなぎ | 写真を縦・横につなぐ</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;color:#202936;background:#f8f7f4;font-synthesis:none}
 *{box-sizing:border-box} [hidden]{display:none!important} body{margin:0;min-height:100vh} button,input,select{font:inherit} button{cursor:pointer} button:disabled{cursor:not-allowed;opacity:.42} button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #72a4ce;outline-offset:2px}
@@ -18,8 +18,21 @@ main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:2
 .modal{position:fixed;inset:0;z-index:20;background:rgba(17,31,35,.64);padding:12px;display:flex;align-items:center;justify-content:center}.modal[hidden]{display:none}.modalcard{background:white;border-radius:17px;max-width:920px;width:100%;max-height:calc(100dvh - 24px);overflow:auto;padding:20px;box-shadow:0 15px 75px #14232c55}.modalhead{display:flex;justify-content:space-between;gap:10px;align-items:center}.modalhead h2{font-size:19px;margin:0}.close{background:#f3f5f5;border:0;border-radius:9px;width:35px;height:35px;font-size:21px;color:#51646a}.modaldesc{font-size:12px;color:#647680;line-height:1.7;margin:9px 0 15px}.editorCols{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:18px;align-items:start}.stageWrap{background:#253035;padding:14px;border-radius:12px;min-height:160px;display:flex;align-items:center;justify-content:center}.editorStage{position:relative;display:inline-block;line-height:0;max-width:100%;overflow:hidden;touch-action:none;user-select:none}.editorStage img{display:block;max-height:46vh;max-width:100%;width:auto;height:auto;pointer-events:none;-webkit-user-drag:none}.cropBox{position:absolute;box-shadow:0 0 0 200vmax rgba(0,0,0,.55);outline:2px solid #fff;cursor:move;touch-action:none;background-image:linear-gradient(to right,transparent 32.8%,#ffffff88 33.1%,transparent 33.4%,transparent 66%,#ffffff88 66.4%,transparent 66.7%),linear-gradient(to bottom,transparent 32.8%,#ffffff88 33.1%,transparent 33.4%,transparent 66%,#ffffff88 66.4%,transparent 66.7%)}.handle{position:absolute;width:22px;height:22px;border:3px solid #fff;border-radius:4px;background:#2d7c7e;box-shadow:0 1px 5px #0006;touch-action:none}.handle[data-dir=nw]{left:0;top:0;transform:translate(-50%,-50%);cursor:nwse-resize}.handle[data-dir=ne]{right:0;top:0;transform:translate(50%,-50%);cursor:nesw-resize}.handle[data-dir=sw]{left:0;bottom:0;transform:translate(-50%,50%);cursor:nesw-resize}.handle[data-dir=se]{right:0;bottom:0;transform:translate(50%,50%);cursor:nwse-resize}.handle[data-dir=n]{left:50%;top:0;transform:translate(-50%,-50%);cursor:ns-resize}.handle[data-dir=s]{left:50%;bottom:0;transform:translate(-50%,50%);cursor:ns-resize}.handle[data-dir=w]{left:0;top:50%;transform:translate(-50%,-50%);cursor:ew-resize}.handle[data-dir=e]{right:0;top:50%;transform:translate(50%,-50%);cursor:ew-resize}.sliders{border:1px solid #e3e9e9;border-radius:11px;padding:13px}.sliders h3{margin:0 0 10px;font-size:13px}.sliderRow{margin:11px 0}.sliderRow>div{display:flex;justify-content:space-between;font-size:12px;color:#50616a;font-weight:600}.sliderRow input{width:100%;accent-color:#287477;margin:9px 0 0}.editorfoot{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:17px;flex-wrap:wrap}.editorfoot .right{display:flex;gap:9px}footer{color:#859198;font-size:11px;text-align:center;margin-top:25px}
 @media(max-width:790px){.page{padding:19px 13px 60px}header{margin-bottom:18px}.offline{font-size:11px}h1{font-size:22px}main{grid-template-columns:1fr}.panel{padding:16px}.previewPanel{position:static}.previewScroll{max-height:450px}.editorCols{grid-template-columns:1fr}.sliders{display:grid;grid-template-columns:1fr 1fr;column-gap:15px}.sliders h3{grid-column:1/-1}.editorStage img{max-height:38vh}.modalcard{padding:15px}.handle{width:20px;height:20px}}
 @media(max-width:380px){.offline{display:none}.fieldgrid{gap:7px}.item{grid-template-columns:62px minmax(0,1fr)}.thumb{width:62px}.button.tiny{padding:6px 7px}}
-/* 全画像をページ上に表示。狭いプレビュー枠の内部スクロールを廃止 */
+/* 縦モードは全体を表示。横モードは指で左右へスクロール */
 .previewPanel{position:static}.previewScroll{max-height:none;overflow:visible;display:block}.previewStack{margin:0 auto}
+.directionTabs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:-6px 0 18px;padding:5px;border-radius:15px;background:#e8eeee;border:1px solid #dce6e5;max-width:480px}
+.directionTab{border:0;border-radius:11px;background:transparent;color:#536a70;font-size:15px;font-weight:750;padding:12px 15px;min-height:45px;cursor:pointer}
+.directionTab.active{background:#fff;color:#1d6265;box-shadow:0 2px 9px #273f4316}
+.directionTab:focus-visible{outline:3px solid #72a4ce;outline-offset:2px}
+ .previewPanel,.previewShell{min-width:0}.previewShell{overflow:hidden}
+.previewScroll.horizontal{width:100%;min-width:0;max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+.previewStack.horizontal{display:flex;flex-direction:row;align-items:stretch;width:max-content;max-width:none;margin:0}
+.previewStack.horizontal canvas{display:block;width:auto;height:190px;max-width:none;flex-shrink:0}
+.previewStack.horizontal .previewSpacer{flex-shrink:0;height:190px}
+.previewScroll.horizontal::-webkit-scrollbar{height:9px}
+.previewScroll.horizontal::-webkit-scrollbar-thumb{background:#bbcaca;border-radius:8px}
+@media(max-width:790px){.directionTabs{max-width:none}.previewStack.horizontal canvas{height:170px}.previewStack.horizontal .previewSpacer{height:170px}}
+
 .cropBadge{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:3px 7px;border-radius:999px;background:#e7f6ee;color:#20744c;border:1px solid #bce2cd;font-size:11px;font-weight:700}
 .exportActions{display:flex;gap:8px;flex-wrap:wrap}.exportActions .button{flex:0 1 auto}
 @media(max-width:790px){.previewScroll{max-height:none;overflow:visible}.exportActions{width:100%}.exportActions .button{flex:1 1 170px}}
@@ -27,17 +40,21 @@ main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:2
 </head>
 <body>
 <div class="page">
-<header><div class="brand"><div class="mark">縦</div><div><h1>たてつなぎ</h1><p>1枚ずつ切って、好きな順番で縦につなぐ</p></div></div><span class="offline">✓ 画像は端末内で処理</span></header>
+<header><div class="brand"><div class="mark">縦</div><div><h1>たてつなぎ</h1><p>1枚ずつ切って、縦にも横にもつなぐ</p></div></div><span class="offline">✓ 画像は端末内で処理</span></header>
+<div class="directionTabs" role="group" aria-label="写真をつなぐ方向">
+  <button class="directionTab active" id="modeVertical" type="button" aria-pressed="true">↕ 縦につなぐ</button>
+  <button class="directionTab" id="modeHorizontal" type="button" aria-pressed="false">↔ 横につなぐ</button>
+</div>
 <main>
 <section class="panel">
   <div class="sectiontop"><h2>① 写真を選ぶ</h2><span class="muted">複数枚まとめてOK</span></div>
   <div class="upload" id="dropZone"><div class="upicon">＋</div><strong>写真を追加してください</strong><p>ここに画像をドラッグ、または下のボタンから選択</p><button class="button primary" id="chooseBtn" type="button">写真を選ぶ</button><input class="file" type="file" id="fileInput" accept="image/*" multiple></div>
   <div class="countline"><strong>② 並び順とトリミング <span class="muted" id="countLabel">（0枚）</span></strong><button class="button ghost tiny" id="clearBtn" type="button" disabled>すべて削除</button></div>
   <div id="photos" class="photos" aria-live="polite"></div>
-  <div class="settings"><h2>③ 出力設定</h2><div class="fieldgrid"><div class="field"><label for="widthSelect">出力の横幅</label><select id="widthSelect"><option value="720">720px（軽量）</option><option value="1080" selected>1080px（標準）</option><option value="1440">1440px（高画質）</option><option value="2048">2048px（高精細）</option></select></div><div class="field"><label for="gapInput">写真の間隔</label><select id="gapInput"><option value="0" selected>0px（隙間なし）</option><option value="8">8px</option><option value="20">20px</option><option value="40">40px</option></select></div></div>
+  <div class="settings"><h2>③ 出力設定</h2><div class="fieldgrid"><div class="field"><label for="widthSelect" id="dimensionLabel">出力の横幅</label><select id="widthSelect"><option value="720">720px（軽量）</option><option value="1080" selected>1080px（標準）</option><option value="1440">1440px（高画質）</option><option value="2048">2048px（高精細）</option></select></div><div class="field"><label for="gapInput">写真の間隔</label><select id="gapInput"><option value="0" selected>0px（隙間なし）</option><option value="8">8px</option><option value="20">20px</option><option value="40">40px</option></select></div></div>
    <div class="exportbox"><div class="exportActions"><button class="button primary" id="shareBtn" type="button" disabled>共有メニューを開く</button><button class="button" id="exportBtn" type="button" disabled>PNGをダウンロード</button></div><p class="muted" id="sizeInfo">画像を追加すると保存できます</p></div><p class="state" id="status" role="status"></p></div>
 </section>
-<aside class="panel previewPanel"><div class="sectiontop"><h2>完成イメージ</h2><span class="muted" id="previewCount">自動プレビュー</span></div><div class="previewShell"><div class="previewEmpty" id="previewEmpty"><span>▤</span>画像がここに縦につながります</div><div class="previewScroll" id="previewScroll" hidden><div class="previewStack" id="previewStack"></div></div></div><p class="hint">全画像を縦に表示します。長い画像はページを下へスクロールして確認してください。保存時には上で指定した横幅のPNG画像を作成します。</p><div class="tips"><b>使い方</b>：写真を追加 → 各写真の「切り抜く」から上下左右を調整 → ↑↓で並び替え → 共有メニューから「画像を保存」（またはPNGダウンロード）。<br>※写真はネットに送信されません。処理を終了すると編集内容は消えます。</div></aside>
+<aside class="panel previewPanel"><div class="sectiontop"><h2>完成イメージ</h2><span class="muted" id="previewCount">自動プレビュー</span></div><div class="previewShell"><div class="previewEmpty" id="previewEmpty"><span>▤</span>画像がここに縦につながります</div><div class="previewScroll" id="previewScroll" hidden><div class="previewStack" id="previewStack"></div></div></div><p class="hint" id="previewHint">プレビューは縮小表示です。保存時には指定した横幅のPNG画像を作成します。</p><div class="tips"><b>使い方</b>：写真を追加 → 各写真の「切り抜く」から上下左右を調整 → ↑↓で並び替え → 縦・横を選択 → 共有またはPNG保存。<br>※写真はネットに送信されません。処理を終了すると編集内容は消えます。</div></aside>
 </main>
 <footer>たてつなぎ / ブラウザだけで使える個人用画像結合ツール</footer>
 </div>
@@ -49,8 +66,9 @@ main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:2
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-const elements={input:$('fileInput'),drop:$('dropZone'),photos:$('photos'),preview:$('previewStack'),empty:$('previewEmpty'),previewScroll:$('previewScroll'),count:$('countLabel'),clear:$('clearBtn'),export:$('exportBtn'),share:$('shareBtn'),previewCount:$('previewCount'),status:$('status'),size:$('sizeInfo'),width:$('widthSelect'),gap:$('gapInput'),modal:$('editorModal'),stage:$('editorStage'),box:$('cropBox'),editorImage:$('editorImage')};
+const elements={input:$('fileInput'),drop:$('dropZone'),photos:$('photos'),preview:$('previewStack'),empty:$('previewEmpty'),previewScroll:$('previewScroll'),previewHint:$('previewHint'),dimensionLabel:$('dimensionLabel'),verticalTab:$('modeVertical'),horizontalTab:$('modeHorizontal'),count:$('countLabel'),clear:$('clearBtn'),export:$('exportBtn'),share:$('shareBtn'),previewCount:$('previewCount'),status:$('status'),size:$('sizeInfo'),width:$('widthSelect'),gap:$('gapInput'),modal:$('editorModal'),stage:$('editorStage'),box:$('cropBox'),editorImage:$('editorImage')};
 let items=[],nextId=1,activeId=null,draft=null,pointer=null,lastFocus=null;
+let direction='vertical',verticalSize=1080,horizontalSize=540;
 let outputBlob=null,outputFilename='',outputVersion=0;
 function invalidateOutput(){outputVersion++;outputBlob=null;outputFilename='';}
 const isCropped=c=>Math.abs(c.x)>.00001||Math.abs(c.y)>.00001||Math.abs(c.w-1)>.00001||Math.abs(c.h-1)>.00001;
@@ -65,25 +83,63 @@ function drawCrop(ctx,img,crop,x,y,w,h){const sx=img.naturalWidth*crop.x,sy=img.
 function buildThumb(canvas,item){const {width,height}=getDims(item);const scale=Math.min(78/width,85/height);canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));const ctx=canvas.getContext('2d');if(ctx)drawCrop(ctx,item.image,item.crop,0,0,canvas.width,canvas.height);}
 function button(label,classes,click,disabled=false){const b=document.createElement('button');b.type='button';b.className=classes;b.textContent=label;b.disabled=disabled;b.addEventListener('click',click);return b;}
 function renderPhotos(){elements.photos.replaceChildren();items.forEach((item,index)=>{const card=document.createElement('div');card.className='item';const thumb=document.createElement('div');thumb.className='thumb';const canvas=document.createElement('canvas');buildThumb(canvas,item);thumb.append(canvas);const content=document.createElement('div');const head=document.createElement('div');head.className='itemhead';const names=document.createElement('div');const title=document.createElement('div');title.className='fname';const num=document.createElement('span');num.className='itemnum';num.textContent=index+1;title.append(num,document.createTextNode(item.name));names.append(title);const dims=getDims(item);const details=document.createElement('div');details.className='meta';details.textContent=`切り抜き後のサイズ：${dims.width} × ${dims.height}px`;names.append(details);if(isCropped(item.crop)){const badge=document.createElement('span');badge.className='cropBadge';badge.textContent='✓ トリミング済み';names.append(badge);}const sorts=document.createElement('div');sorts.className='sort';sorts.append(button('↑','',()=>move(index,-1),index===0),button('↓','',()=>move(index,1),index===items.length-1));head.append(names,sorts);const actions=document.createElement('div');actions.className='actions';actions.append(button('✂ 切り抜く','button tiny',()=>openEditor(item.id)),button('削除','button tiny danger',()=>remove(item.id)));content.append(head,actions);card.append(thumb,content);elements.photos.append(card);});elements.count.textContent=`（${items.length}枚）`;elements.clear.disabled=elements.export.disabled=elements.share.disabled=items.length===0;}
-function buildPreview(){elements.preview.replaceChildren();const has=items.length>0;elements.empty.hidden=has;elements.previewScroll.hidden=!has;elements.previewCount.textContent=has?`全${items.length}枚を表示`:'自動プレビュー';if(!has){elements.size.textContent='画像を追加すると保存できます';return;}const gap=Number(elements.gap.value);items.forEach((item,index)=>{const dims=getDims(item);const width=320,height=Math.max(1,Math.round(width*dims.height/dims.width));const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');if(ctx)drawCrop(ctx,item.image,item.crop,0,0,width,height);elements.preview.append(canvas);if(index<items.length-1&&gap){const bar=document.createElement('div');bar.className='previewSpacer';bar.style.height=`${Math.max(1,Math.round(gap*320/Number(elements.width.value)))}px`;elements.preview.append(bar);}});const plan=outputDimensions();elements.size.textContent=`保存予定：${plan.width.toLocaleString()} × ${plan.height.toLocaleString()}px`;}
+function buildPreview(){
+ elements.preview.replaceChildren();const has=items.length>0,horizontal=direction==='horizontal';
+ elements.empty.hidden=has;elements.previewScroll.hidden=!has;
+ elements.previewScroll.classList.toggle('horizontal',horizontal);
+ elements.preview.classList.toggle('horizontal',horizontal);
+ elements.previewCount.textContent=has?`全${items.length}枚を${horizontal?'横':'縦'}方向に表示`:'自動プレビュー';
+ elements.previewHint.textContent=horizontal?'画像は左から右の順番です。プレビューを左右にスクロールすると全枚数を確認できます。保存時は指定した高さで出力します。':'プレビューは縦方向に全画像を表示しています。保存時には指定した横幅で出力します。';
+ if(!has){elements.size.textContent='画像を追加すると保存できます';return;}
+ const gap=Number(elements.gap.value),previewCross=horizontal?(window.matchMedia('(max-width:790px)').matches?170:190):320;
+ items.forEach((item,index)=>{
+  const dims=getDims(item);
+  const width=horizontal?Math.max(1,Math.round(previewCross*dims.width/dims.height)):previewCross;
+  const height=horizontal?previewCross:Math.max(1,Math.round(previewCross*dims.height/dims.width));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+  const ctx=canvas.getContext('2d');if(ctx)drawCrop(ctx,item.image,item.crop,0,0,width,height);
+  elements.preview.append(canvas);
+  if(index<items.length-1&&gap){const bar=document.createElement('div');bar.className='previewSpacer';
+   const px=Math.max(1,Math.round(gap*previewCross/Number(elements.width.value)));
+   if(horizontal){bar.style.width=`${px}px`;}else{bar.style.height=`${px}px`;}
+   elements.preview.append(bar);
+  }
+ });
+ const plan=outputDimensions();elements.size.textContent=`保存予定：${plan.width.toLocaleString()} × ${plan.height.toLocaleString()}px`;
+}
 function render(){invalidateOutput();renderPhotos();buildPreview();}
+function setDirection(next){
+ if(next===direction||!['vertical','horizontal'].includes(next))return;
+ if(direction==='vertical')verticalSize=Number(elements.width.value);else horizontalSize=Number(elements.width.value);
+ direction=next;
+ const horizontal=next==='horizontal';
+ const sizes=horizontal?[[360,'360px（軽量）'],[540,'540px（標準）'],[720,'720px（高画質）'],[1080,'1080px（高精細）']]:[[720,'720px（軽量）'],[1080,'1080px（標準）'],[1440,'1440px（高画質）'],[2048,'2048px（高精細）']];
+ elements.width.replaceChildren(...sizes.map(([value,label])=>new Option(label,String(value))));
+ elements.width.value=String(horizontal?horizontalSize:verticalSize);
+ elements.dimensionLabel.textContent=horizontal?'出力の高さ':'出力の横幅';
+ for(const [btn,active] of [[elements.verticalTab,!horizontal],[elements.horizontalTab,horizontal]]){
+  btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));
+ }
+ render();status(horizontal?'横つなぎに切り替えました。写真は左から右の順番です。':'縦つなぎに切り替えました。写真は上から下の順番です。',true);
+}
 function move(i,delta){const j=i+delta;if(j<0||j>=items.length)return;[items[i],items[j]]=[items[j],items[i]];render();status('並び順を変更しました。',true);}
 function remove(id){const i=items.findIndex(it=>it.id===id);if(i<0)return;URL.revokeObjectURL(items[i].url);items.splice(i,1);render();status('写真を削除しました。',true);}
 async function loadImage(file){const url=URL.createObjectURL(file);const img=new Image();img.src=url;try{if(img.decode)await img.decode();else await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});if(!img.naturalWidth||!img.naturalHeight)throw Error('画像を読み取れません');return {url,image:img};}catch(e){URL.revokeObjectURL(url);throw e;}}
 async function addFiles(files){const candidates=Array.from(files||[]).filter(f=>f.type.startsWith('image/')||/\.(png|jpe?g|webp|gif|heic|heif|bmp)$/i.test(f.name));if(!candidates.length){status('画像ファイルを選択してください。');return;}status(`${candidates.length}枚を読み込み中…`);let errors=[];for(const file of candidates){try{const loaded=await loadImage(file);items.push({id:nextId++,name:file.name,...loaded,crop:fullCrop()});}catch(e){errors.push(file.name);}}render();status(errors.length?`読み込めない画像がありました：${errors.join('、')}（別の画像形式でお試しください）`:`${candidates.length}枚の写真を追加しました。`,errors.length===0);elements.input.value='';}
-function outputDimensions(){const width=Number(elements.width.value),gap=Number(elements.gap.value);let height=items.reduce((sum,it)=>sum+Math.max(1,Math.round(width*it.image.naturalHeight*it.crop.h/(it.image.naturalWidth*it.crop.w))),0)+gap*Math.max(0,items.length-1);return {width,height,gap};}
-function makeFilename(){const now=new Date();const day=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;return `たてつなぎ_${day}.png`;}
+function itemLength(item,cross){return direction==='vertical'?Math.max(1,Math.round(cross*item.image.naturalHeight*item.crop.h/(item.image.naturalWidth*item.crop.w))):Math.max(1,Math.round(cross*item.image.naturalWidth*item.crop.w/(item.image.naturalHeight*item.crop.h)));}
+function outputDimensions(){const cross=Number(elements.width.value),gap=Number(elements.gap.value),total=items.reduce((sum,it)=>sum+itemLength(it,cross),0)+gap*Math.max(0,items.length-1);return direction==='vertical'?{width:cross,height:total,gap}:{width:total,height:cross,gap};}
+function makeFilename(){const now=new Date();const day=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;return `${direction==='vertical'?'たてつなぎ':'よこつなぎ'}_${day}.png`;}
 async function preparePNG(){
  if(outputBlob)return outputBlob;
  if(!items.length)throw Error('写真を追加してください');
  const {width,height,gap}=outputDimensions();
- if(height>16000||width*height>24000000)throw Error('画像が大きすぎます。横幅を小さくするか、画像を減らしてください（上限：高さ16,000px・2,400万画素）');
+ if(width>16000||height>16000||width*height>24000000)throw Error('画像が大きすぎます。出力サイズを小さくするか、画像を減らしてください（上限：縦横16,000px・2,400万画素）');
  const version=outputVersion,canvas=document.createElement('canvas');
  try{
   canvas.width=width;canvas.height=height;
   const ctx=canvas.getContext('2d');if(!ctx)throw Error('画像処理機能を利用できません');
   ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  let y=0;for(const item of items){const h=Math.max(1,Math.round(width*item.image.naturalHeight*item.crop.h/(item.image.naturalWidth*item.crop.w)));drawCrop(ctx,item.image,item.crop,0,y,width,h);y+=h+gap;}
+  let pos=0;for(const item of items){if(direction==='vertical'){const h=itemLength(item,width);drawCrop(ctx,item.image,item.crop,0,pos,width,h);pos+=h+gap;}else{const w=itemLength(item,height);drawCrop(ctx,item.image,item.crop,pos,0,w,height);pos+=w+gap;}}
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('PNGを作成できませんでした')),'image/png'));
   if(version!==outputVersion)throw Error('画像の作成中に編集内容が変更されました。もう一度実行してください');
   outputBlob=blob;outputFilename=makeFilename();return blob;
@@ -128,7 +184,8 @@ function pointerUp(e){if(pointer&&e.pointerId===pointer.id)pointer=null;}
 $('chooseBtn').addEventListener('click',()=>elements.input.click());elements.input.addEventListener('change',e=>addFiles(e.target.files));
 ['dragenter','dragover'].forEach(evt=>elements.drop.addEventListener(evt,e=>{e.preventDefault();elements.drop.classList.add('drag');}));['dragleave','drop'].forEach(evt=>elements.drop.addEventListener(evt,e=>{e.preventDefault();elements.drop.classList.remove('drag');}));elements.drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
 elements.clear.addEventListener('click',()=>{if(!items.length)return;if(!window.confirm(`${items.length}枚の写真をすべて削除しますか？`))return;items.forEach(item=>URL.revokeObjectURL(item.url));items=[];render();status('写真をすべて削除しました。',true);});
-elements.width.addEventListener('change',()=>{invalidateOutput();buildPreview();});elements.gap.addEventListener('change',()=>{invalidateOutput();buildPreview();});elements.export.addEventListener('click',exportPNG);elements.share.addEventListener('click',sharePNG);
+elements.verticalTab.addEventListener('click',()=>setDirection('vertical'));elements.horizontalTab.addEventListener('click',()=>setDirection('horizontal'));
+elements.width.addEventListener('change',()=>{if(direction==='vertical')verticalSize=Number(elements.width.value);else horizontalSize=Number(elements.width.value);invalidateOutput();buildPreview();});elements.gap.addEventListener('change',()=>{invalidateOutput();buildPreview();});elements.export.addEventListener('click',exportPNG);elements.share.addEventListener('click',sharePNG);
 $('closeEditor').addEventListener('click',closeEditor);$('cancelCrop').addEventListener('click',closeEditor);elements.modal.addEventListener('mousedown',e=>{if(e.target===elements.modal)closeEditor();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!elements.modal.hidden)closeEditor();});
 $('resetCrop').addEventListener('click',()=>{draft=fullCrop();syncEditor();});$('saveCrop').addEventListener('click',()=>{const item=items.find(i=>i.id===activeId);if(item&&draft){item.crop=copyCrop(draft);closeEditor();render();status('トリミングを反映しました。',true);}});
 ['Top','Bottom','Left','Right'].forEach(side=>$('trim'+side).addEventListener('input',e=>sliderUpdate(side,Number(e.target.value))));
