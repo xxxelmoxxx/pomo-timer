@@ -36,11 +36,14 @@ main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:2
 .cropBadge{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:3px 7px;border-radius:999px;background:#e7f6ee;color:#20744c;border:1px solid #bce2cd;font-size:11px;font-weight:700}
 .exportActions{display:flex;gap:8px;flex-wrap:wrap}.exportActions .button{flex:0 1 auto}
 @media(max-width:790px){.previewScroll{max-height:none;overflow:visible}.exportActions{width:100%}.exportActions .button{flex:1 1 170px}}
+/* 関連アプリへのリンク。編集中の写真を残すため別タブで開く */
+.headerTools{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}.momentLink{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #bcd5d3;color:#215f62;background:#fff;border-radius:10px;padding:10px 12px;text-decoration:none;font-size:12px;font-weight:750;white-space:nowrap;min-height:40px}.momentLink:hover{background:#edf6f5}.momentLink:focus-visible{outline:3px solid #72a4ce;outline-offset:2px}.brand{min-width:0}.brand .mark{flex-shrink:0}
+@media(max-width:790px){header{gap:8px}.headerTools{gap:4px}.momentLink{padding:8px 9px;min-height:44px;font-size:11px}.brand{gap:8px}.brand p{font-size:11px;line-height:1.5}.headerTools .offline{padding:5px 7px;font-size:10px}} 
 </style>
 </head>
 <body>
 <div class="page">
-<header><div class="brand"><div class="mark">縦</div><div><h1>たてつなぎ</h1><p>1枚ずつ切って、縦にも横にもつなぐ</p></div></div><span class="offline">✓ 画像は端末内で処理</span></header>
+<header><div class="brand"><div class="mark">縦</div><div><h1>たてつなぎ</h1><p>1枚ずつ切って、縦にも横にもつなぐ</p></div></div><div class="headerTools"><a class="momentLink" href="../moment/" target="_blank" rel="noopener noreferrer" aria-label="この瞬間の写真を新しいタブで開く">この瞬間の写真 <span aria-hidden="true">↗</span></a><span class="offline">✓ 画像は端末内で処理</span></div></header>
 <div class="directionTabs" role="group" aria-label="写真をつなぐ方向">
   <button class="directionTab active" id="modeVertical" type="button" aria-pressed="true">↕ 縦につなぐ</button>
   <button class="directionTab" id="modeHorizontal" type="button" aria-pressed="false">↔ 横につなぐ</button>
