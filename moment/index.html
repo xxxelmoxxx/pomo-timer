@@ -31,6 +31,10 @@
     .note{border-radius:12px;background:#f8f8fe;padding:12px;font-size:12px;line-height:1.8;color:#616278;margin-top:13px}.status{font-size:12px;line-height:1.6;min-height:0;margin:8px 0 0;color:#5c6484}.status.error{color:#ae3b4c}
     footer{font-size:11px;text-align:center;color:#898993;line-height:1.8;margin-top:22px}
     [hidden]{display:none!important}
+    /* 関連アプリ：作業中の動画を残すため別タブで開く */
+    .top .mark{flex-shrink:0}.top h1{min-width:0}.tateLink{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1px solid #cbd0fa;background:#fff;color:#4050c1;border-radius:10px;padding:10px 12px;min-height:44px;font-size:12px;font-weight:750;white-space:nowrap;text-decoration:none}.tateLink:hover{background:var(--accent2)}.tateLink:focus-visible{outline:3px solid #8994f5;outline-offset:2px}
+    @media(max-width:480px){.top{gap:8px}.top h1{font-size:20px;line-height:1.25}.top .mark{width:36px;height:36px;border-radius:12px}.tateLink{padding:8px;font-size:11px}}
+    @media(max-width:360px){.top h1{font-size:17px}.top{gap:6px}.tateLink{padding:7px;font-size:10px}}
   </style>
 </head>
 <body>
@@ -39,6 +43,7 @@
     <div class="top">
       <div class="mark" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M8 5 9.5 2.8h5L16 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
       <h1>この瞬間の写真</h1>
+      <a class="tateLink" href="../tate/" target="_blank" rel="noopener noreferrer" aria-label="たてよこつなぎを新しいタブで開く">たてよこつなぎ <span aria-hidden="true">↗</span></a>
     </div>
     <p class="subtitle">動画の中の「いま！」を、1枚の写真に。</p>
   </header>
