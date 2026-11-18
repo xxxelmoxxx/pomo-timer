@@ -73,10 +73,24 @@ button:disabled{opacity:.55;cursor:default}
 }
 @media(max-width:370px){.test-tab{font-size:.8rem}.test-tab small{font-size:.63rem}.grid{grid-template-columns:1fr 1fr}.number-grid button{min-height:47px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* v2.1: history and external-reference comparison */
+.comparison-panel{margin:15px 0 0}
+.comparison-panel h3{font-size:1rem;margin:0 0 6px}
+.comparison-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:10px}
+.compare-card{background:#f8fbfa;border:1px solid #dde8e7;border-radius:12px;padding:12px;min-width:0}
+.compare-card strong{display:block;font-size:.92rem;color:#233f45}
+.compare-current{font-size:1.1rem;font-weight:750;color:#116a64;margin:6px 0 8px}
+.compare-row{border-top:1px dashed #d6e3e1;padding-top:7px;margin-top:7px}
+.compare-row span{display:block;font-size:.75rem;color:#60727a}
+.compare-row b{display:block;font-size:.86rem;line-height:1.5;font-weight:650;overflow-wrap:anywhere}
+.compare-note{font-size:.75rem;color:#5c6b73;line-height:1.65;margin:8px 0 0}
+.compare-note a{color:#0d6862;text-decoration:underline}
+@media(max-width:700px){.comparison-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header><div class="eyebrow">PERSONAL CONDITION TRACKER • v2.0</div><h1>注意・集中・反応<br>コンディションチェック</h1><p>iPhoneで3つの短いテスト。いつもの自分との変化を記録できます。</p></header>
+<header><div class="eyebrow">PERSONAL CONDITION TRACKER • v2.1</div><h1>注意・集中・反応<br>コンディションチェック</h1><p>iPhoneで3つの短いテスト。いつもの自分との変化を記録できます。</p></header>
 <main class="wrap">
 <section class="panel" id="setupPanel">
 <h2>はじめに <span class="flag">個人用・非医療</span></h2>
@@ -103,7 +117,7 @@ button:disabled{opacity:.55;cursor:default}
 <div class="button-row"><button class="primary" id="startBtn" type="button">① 反応速度を開始する</button><button class="outline hidden" id="abortBtn" type="button">中断</button></div>
 <div class="result-line hidden" id="testResult" aria-live="polite"></div>
 </section>
-<section class="panel"><h2>今回の結果</h2><div class="grid" id="currentMetrics"><div class="metric"><b>—</b><small>反応速度（中央値）</small></div><div class="metric"><b>—</b><small>数字探し（所要秒）</small></div><div class="metric"><b>—</b><small>抑制テスト（正答率）</small></div></div><p class="muted" id="compareText">過去の同じ端末・条件での結果と比べてください。数値だけで正常／異常は判定しません。</p><div class="button-row"><button id="saveBtn" class="primary" type="button" disabled>今回の結果を保存</button><button id="resetBtn" class="secondary" type="button">今回のテスト結果をリセット</button></div><p class="tiny">保存先はこの端末のブラウザ／ホーム画面アプリ内です。サーバー送信はありません。Safariとホーム画面版では履歴が共有されない場合があります。定期的にCSVを書き出してください。</p></section>
+<section class="panel"><h2>今回の結果</h2><div class="grid" id="currentMetrics"><div class="metric"><b>—</b><small>反応速度（中央値）</small></div><div class="metric"><b>—</b><small>数字探し（所要秒）</small></div><div class="metric"><b>—</b><small>抑制テスト（正答率）</small></div></div><p class="muted" id="compareText">参考平均と前回の記録との差を表示します。テストの成績だけで正常／異常や薬の影響は判定できません。</p><div id="comparisonPanel" class="comparison-panel" aria-live="polite"></div><div class="button-row"><button id="saveBtn" class="primary" type="button" disabled>今回の結果を保存</button><button id="resetBtn" class="secondary" type="button">今回のテスト結果をリセット</button></div><p class="tiny">保存先はこの端末のブラウザ／ホーム画面アプリ内です。サーバー送信はありません。Safariとホーム画面版では履歴が共有されない場合があります。定期的にCSVを書き出してください。</p></section>
 <section class="panel"><h2>記録履歴</h2><div class="history" id="historyContainer"><p class="muted">記録はまだありません。</p></div><div class="button-row"><button class="secondary" id="csvBtn" type="button">CSVを保存・共有</button><button class="danger" id="clearBtn" type="button">このブラウザの履歴を削除</button></div><p class="tiny" id="storageNotice">履歴はこの端末だけに保存。機種変更・ブラウザデータ削除・アプリ削除に備え、CSVを保管してください。</p></section>
 <section class="panel"><h2>結果の読み方</h2><p class="muted">反応速度は小さいほど速く、数字探しは短時間かつミスが少ないほど良い傾向です。抑制テストは「押すべき時に押せたか／押してはいけない時に押していないか」を確認します。最初の数回は操作に慣れるだけでも成績が上がります。5回程度以上の同条件の記録から、個人内の変化を見る用途を想定しています。</p><p class="muted">医療用の標準化検査、診断、薬の因果関係の確認、運転適性の判定を目的とした検査ではありません。端末・OS・ブラウザによってミリ秒値に差が生じます。</p><p class="tiny">独自の簡易課題です。臨床で使用する検査を再現したものではなく、薬の副作用の有無や安全運転の可否は判断できません。</p></section>
 </main>
@@ -137,7 +151,43 @@ $('stage').addEventListener('pointerdown',e=>{if(!active)return;e.preventDefault
 $('stage').addEventListener('keydown',e=>{if(!active||!(e.key===' '||e.key==='Enter'))return;e.preventDefault();if(e.repeat)return;if(selected==='reaction')onReactionTap();else if(selected==='inhibit')onInhibitTap()});
 tabs.forEach(t=>t.addEventListener('click',()=>select(t.dataset.test)));
 $('startBtn').addEventListener('click',start);$('abortBtn').addEventListener('click',abort);
-function updateMetrics(){const r=results.reaction,s=results.search,i=results.inhibit;$('currentMetrics').innerHTML=`<div class="metric"><b>${r&&r.medianMs!=null?Math.round(r.medianMs)+' ms':'—'}</b><small>反応速度（中央値）${r?' / 無反応 '+r.misses+'回':''}</small></div><div class="metric"><b>${s?s.seconds.toFixed(1)+' 秒':'—'}</b><small>数字探し ${s?' / ミス '+s.errors+'回':''}</small></div><div class="metric"><b>${i?i.accuracy+'%':'—'}</b><small>抑制テスト ${i?' / 誤タップ '+i.falseAlarms+'回':''}</small></div>`;const done=Object.keys(results).length;$('completedPill').textContent=done+' / 3 完了';$('saveBtn').disabled=done===0 || lastSavedFingerprint===JSON.stringify(results);const history=loadHistory();if(r&&history.length){const past=history.filter(h=>h.reaction&&h.reaction.medianMs!=null).slice(-5).map(h=>h.reaction.medianMs);if(past.length>=3){const ref=median(past);$('compareText').textContent='参考：直近'+past.length+'件の反応速度の中央値 '+Math.round(ref)+' ms ／ 今回 '+Math.round(r.medianMs)+' ms。測定条件や練習効果の違いに注意。';return}}$('compareText').textContent='過去の同じ端末・条件での結果と比べてください。数値だけで正常／異常は判定しません。'}
+function updateMetrics(){const r=results.reaction,s=results.search,i=results.inhibit;$('currentMetrics').innerHTML=`<div class="metric"><b>${r&&r.medianMs!=null?Math.round(r.medianMs)+' ms':'—'}</b><small>反応速度（中央値）${r?' / 無反応 '+r.misses+'回':''}</small></div><div class="metric"><b>${s?s.seconds.toFixed(1)+' 秒':'—'}</b><small>数字探し ${s?' / ミス '+s.errors+'回':''}</small></div><div class="metric"><b>${i?i.accuracy+'%':'—'}</b><small>抑制テスト ${i?' / 誤タップ '+i.falseAlarms+'回':''}</small></div>`;const done=Object.keys(results).length;$('completedPill').textContent=done+' / 3 完了';$('saveBtn').disabled=done===0 || lastSavedFingerprint===JSON.stringify(results);renderComparison()}
+
+function comparisonNumber(kind,record){if(!record || typeof record!=='object')return null;const n=kind==='reaction'?record.medianMs:kind==='search'?record.seconds:record.accuracy;return typeof n==='number'&&Number.isFinite(n)?n:null}
+function comparisonFormat(kind,value){if(value==null)return '—';return kind==='search'?value.toFixed(1)+' 秒':kind==='inhibit'?Math.round(value)+'%':Math.round(value)+' ms'}
+function comparisonDifference(kind,now,past){const diff=now-past,unit=kind==='reaction'?' ms':kind==='search'?' 秒':' ポイント';const round=kind==='search'?Math.round(diff*10)/10:Math.round(diff);if(Math.abs(round)<(kind==='search'?0.05:0.5))return '差 0'+unit;const dir=kind==='inhibit'?(round>0?'高い':'低い'):(round>0?'長い':'短い');return '差 '+(round>0?'+':'')+round+unit+'（'+dir+'）'}
+function renderComparison(){
+ const history=loadHistory();
+ const saved=lastSavedFingerprint!==null && lastSavedFingerprint===JSON.stringify(results) && Object.keys(results).length>0;
+ const tests=[['reaction','① 反応速度'],['search','② 数字探し'],['inhibit','③ 抑制・集中']];
+ const cards=tests.map(([kind,label])=>{
+  const eligible=history.filter(h=>comparisonNumber(kind,h?.[kind])!==null);
+  const currentFromTest=comparisonNumber(kind,results[kind]);
+  let current=currentFromTest;
+  let previousRows=eligible;
+  let origin=currentFromTest!==null?(saved?'今回（保存済み）':'今回（未保存）'):'最新の保存記録';
+  if(currentFromTest===null && eligible.length){
+   current=comparisonNumber(kind,eligible[eligible.length-1][kind]);
+   previousRows=eligible.slice(0,-1);
+  }else if(currentFromTest!==null && saved && eligible.length){
+   const last=comparisonNumber(kind,eligible[eligible.length-1][kind]);
+   if(last===currentFromTest)previousRows=eligible.slice(0,-1);
+  }
+  if(current===null)return '<article class="compare-card"><strong>'+label+'</strong><p class="compare-note">まだ記録がありません。</p></article>';
+  const past=previousRows.map(h=>comparisonNumber(kind,h[kind]));
+  const last=past.length?past[past.length-1]:null;
+  const avg=past.length?past.reduce((a,b)=>a+b,0)/past.length:null;
+  const prevText=last===null?'前回記録なし':comparisonFormat(kind,last)+' ／ '+comparisonDifference(kind,current,last);
+  const avgText=avg===null?'過去記録なし':comparisonFormat(kind,avg)+' ／ '+comparisonDifference(kind,current,avg);
+  const external=kind==='reaction'
+   ? '<div class="compare-row"><span>一般サイトの参考平均（年齢補正なし）</span><b>284 ms ／ 今回との差 '+(Math.round(current-284)>0?'+':'')+Math.round(current-284)+' ms</b></div>'
+   : '<div class="compare-row"><span>一般の平均値</span><b>比較できる標準値なし（独自テスト）</b></div>';
+  return '<article class="compare-card"><strong>'+label+'</strong><div class="compare-current">'+origin+'：'+comparisonFormat(kind,current)+'</div>'+
+   '<div class="compare-row"><span>前回の保存記録</span><b>'+prevText+'</b></div>'+
+   '<div class="compare-row"><span>自分の過去平均（'+past.length+'回）</span><b>'+avgText+'</b></div>'+external+'</article>';
+ });
+ $('comparisonPanel').innerHTML='<h3>平均値・前回との比較</h3><p class="compare-note">同じ項目の直近保存記録を「前回」とします。過去平均は表示中の記録を除いて算出します。</p><div class="comparison-grid">'+cards.join('')+'</div><p class="compare-note">一般参考平均284msは <a href="https://humanbenchmark.com/tests/reactiontime/statistics" target="_blank" rel="noopener noreferrer">Human Benchmarkの反応時間テスト</a> の平均（2026年11月19日確認）。測定方法・端末・参加者が異なるため、年齢別の基準値でも正常／異常の判定値でもありません。数値が良くても薬の影響なし・運転可能とは判断できません。</p>';
+}
 function loadHistory(){try{const v=JSON.parse(localStorage.getItem(storeKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
 function writeHistory(rows){try{localStorage.setItem(storeKey,JSON.stringify(rows));return true}catch(e){$('storageNotice').textContent='この環境では履歴を保存できません。CSV書き出しを使ってください。';return false}}
 function record(){if(!Object.keys(results).length)return;const hours=$('sleepHours').value.trim();if(hours&&(!Number.isFinite(Number(hours))||+hours<0||+hours>24)){alert('睡眠時間は0～24時間で入力してください。');return}const history=loadHistory();const entry={timestamp:new Date().toISOString(),sleep:$('sleep').value,fatigue:$('fatigue').value,sleepHours:hours,note:$('notes').value.trim(),reaction:results.reaction||null,search:results.search||null,inhibit:results.inhibit||null};history.push(entry);if(writeHistory(history.slice(-100))){lastSavedFingerprint=JSON.stringify(results);updateMetrics();status('今回の結果を保存しました。');renderHistory()}else alert('保存できませんでした。CSV書き出しは利用できます。')}
