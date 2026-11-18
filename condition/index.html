@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0d625e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="コンディションチェック">
+<meta name="description" content="注意・集中・反応の変化を記録する個人用セルフチェック。医療検査や運転適性判定ではありません。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./assets/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
+<title>コンディションチェック｜注意・集中・反応</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:#203441;background:#f6f8f9;line-height:1.55}
+*{box-sizing:border-box}body{margin:0}header{background:#123b47;color:white;padding:24px max(18px,calc((100vw - 900px)/2)) 25px}header .eyebrow{color:#b7e7df;font-size:.78rem;letter-spacing:.12em;font-weight:700}h1{font-size:clamp(1.35rem,4vw,1.9rem);line-height:1.35;margin:6px 0}header p{color:#def3f2;margin:8px 0 0;font-size:.91rem}.wrap{max-width:920px;margin:auto;padding:18px 16px 48px}.panel{background:white;border:1px solid #e2e9ec;border-radius:18px;padding:20px;margin:0 0 16px;box-shadow:0 4px 18px #123b4708}h2{font-size:1.12rem;margin:0 0 12px}h3{font-size:1rem;margin:0 0 7px}.muted{color:#5c6c74;font-size:.9rem}.important{border-left:4px solid #c8842b;background:#fffaf0;padding:13px 15px;border-radius:8px;font-size:.88rem}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{background:#f2f7f8;border-radius:12px;padding:13px}.metric b{font-size:1.1rem;color:#176a69}.metric small{display:block;color:#60737b;font-size:.78rem}.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{font-size:.83rem;display:block;font-weight:700;color:#405967;margin-bottom:5px}select,input{width:100%;background:#fff;color:#203441;border:1px solid #bfced2;border-radius:10px;padding:11px;font:inherit;min-height:44px}button{cursor:pointer;font:inherit;border:0;border-radius:11px;padding:12px 16px;min-height:46px;font-weight:700;touch-action:manipulation}button:focus-visible{outline:3px solid #db993d;outline-offset:3px}.primary{background:#12756e;color:#fff}.secondary{background:#e7f2f1;color:#135e5b}.outline{border:1px solid #bfced2;background:#fff;color:#344f59}.danger{background:#fff1ed;color:#a7442e}.button-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.tests{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.test-tab{background:#f3f6f7;color:#465960;border:1px solid #dce6e7;text-align:left;padding:12px}.test-tab.active{background:#e4f4f2;color:#075e5c;border-color:#47aa9f}.test-tab small{display:block;font-weight:400;font-size:.78rem}.test-tab .done{color:#117268;font-weight:700}.stage{width:100%;min-height:230px;border:2px dashed #c9d9dc;background:#eef3f5;color:#273f49;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:17px;padding:18px;margin:16px 0 6px;font-size:1.25rem;white-space:pre-line;user-select:none;-webkit-user-select:none}.stage.wait{background:#eaf0f2;border-color:#b8cbd1}.stage.go{background:#a8edbd;border-color:#27834e;color:#153e2c}.stage.nogo{background:#ffe0d7;border-color:#a94d39;color:#763422}.stage.result{background:#e8f5f3;border-color:#8bbfb6}.stage .symbol{font-size:4rem;display:block;line-height:1.15;font-weight:800}.status{font-size:.87rem;color:#546971;min-height:1.8em}.number-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:14px 0}.number-grid button{aspect-ratio:1/1;min-height:50px;padding:0;background:#eaf3f4;border:1px solid #bed5d9;color:#214954;font-size:1.5rem;font-weight:800}.number-grid button.found{color:#8a9d9d;background:#f2f5f4}.result-line{padding:13px;border-radius:12px;background:#ecf5f3;margin-top:13px;font-size:.96rem}.history{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:620px;font-size:.83rem}th,td{text-align:left;padding:9px;border-bottom:1px solid #e3eaec;white-space:nowrap}th{background:#f2f6f7}.tiny{font-size:.78rem;color:#5c6b73}.hidden{display:none!important}.pill{display:inline-block;font-size:.72rem;padding:2px 7px;background:#e8f3f1;color:#246862;border-radius:99px;margin-left:3px}@media(max-width:600px){.grid{grid-template-columns:1fr 1fr}.choices{grid-template-columns:1fr}.tests{grid-template-columns:1fr}.test-tab{display:flex;align-items:center;justify-content:space-between;gap:8px}.test-tab small{display:inline}.panel{padding:16px}.stage{min-height:220px}.metric{padding:9px}.metric b{font-size:1rem}.wrap{padding:12px 12px 40px}}
+
+/* v2: iPhone Safari / standalone PWA */
+:root{font-size:16px;font-synthesis:none;-webkit-text-size-adjust:100%;}
+html{scroll-behavior:smooth}
+body{min-width:320px;background:linear-gradient(180deg,#e9f5f1 0,#f6f8f9 240px)}
+header{padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:28px;background:linear-gradient(135deg,#105d61,#123b47);}
+header .eyebrow{font-size:.71rem}
+header p{max-width:660px}
+.wrap{padding-bottom:calc(44px + env(safe-area-inset-bottom,0px))}
+.panel{scroll-margin-top:12px}
+.stage{touch-action:manipulation;overscroll-behavior:contain;-webkit-tap-highlight-color:transparent;line-height:1.5;position:relative}
+.stage:disabled{cursor:default;opacity:1}
+.stage:active:not(:disabled){filter:brightness(.98)}
+.number-grid{touch-action:manipulation}
+.number-grid button{min-height:51px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,select,input{font-size:16px}
+button:disabled{opacity:.55;cursor:default}
+.test-tab:disabled{opacity:.72}
+.test-tab[aria-pressed="true"]{border-color:#07827b;box-shadow:inset 0 0 0 1px #07827b}
+.muted{line-height:1.7}
+.slim-note{margin:0 0 11px;font-size:.88rem;color:#405e63}
+.flag{display:inline-block;border-radius:999px;background:#dceee9;color:#0b5e59;font-size:.7rem;padding:2px 8px;font-weight:800}
+.setup-details{margin-top:8px;border:1px solid #dce8e5;border-radius:12px;background:#fbfdfc}
+.setup-details summary{font-weight:700;cursor:pointer;padding:12px 14px;list-style-position:inside;color:#0b625d}
+.setup-details .choices{padding:2px 12px 12px}
+.hint{font-size:.78rem;color:#526b72}
+.history-card{border:1px solid #e0eaeb;border-radius:12px;background:#f8fbfa;padding:12px;margin:9px 0}
+.history-card strong{font-size:.9rem}
+.history-card .history-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}
+.history-grid div{font-size:.82rem;min-width:0}
+.history-grid b{display:block;color:#116a64;font-size:1rem}
+.history-card .history-note{margin-top:8px;font-size:.82rem;overflow-wrap:anywhere}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:600px){
+ header{padding-left:18px;padding-right:18px}
+ header h1{font-size:1.48rem;margin-top:8px;letter-spacing:.01em}
+ .panel{padding:15px;border-radius:16px;margin-bottom:10px}
+ .panel h2{font-size:1.05rem}
+ .tests{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .test-tab{display:block;text-align:center;padding:9px 3px;min-height:74px;font-size:.88rem;line-height:1.35}
+ .test-tab small{display:block;font-size:.69rem;line-height:1.35;margin-top:4px;color:#526b72}
+ .stage{min-height:242px;margin-top:12px;font-size:1.21rem}
+ .stage .symbol{font-size:4.8rem}
+ .number-grid{gap:6px}
+ .number-grid button{font-size:1.36rem;min-height:52px}
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .metric{padding:11px 7px;border-radius:9px}
+ .metric b{font-size:1.05rem;overflow-wrap:anywhere}
+ .metric small{font-size:.7rem;line-height:1.4;margin-top:2px}
+ .button-row button{flex:1 1 auto;padding:12px 10px}
+ .wrap{padding-left:10px;padding-right:10px}
+ .choices{grid-template-columns:1fr 1fr;gap:9px}
+ .choices .field:last-child{grid-column:span 2}
+ .field input,.field select{font-size:16px}
+}
+@media(max-width:370px){.test-tab{font-size:.8rem}.test-tab small{font-size:.63rem}.grid{grid-template-columns:1fr 1fr}.number-grid button{min-height:47px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">PERSONAL CONDITION TRACKER • v2.0</div><h1>注意・集中・反応<br>コンディションチェック</h1><p>iPhoneで3つの短いテスト。いつもの自分との変化を記録できます。</p></header>
+<main class="wrap">
+<section class="panel" id="setupPanel">
+<h2>はじめに <span class="flag">個人用・非医療</span></h2>
+<div class="important"><strong>重要：</strong>良いスコアでも「薬の影響なし」「運転してよい」とは判定できません。薬の添付文書・医療者からの運転制限を優先してください。強い眠気やふらつきがある日は無理に試さず休みましょう。</div>
+<p class="slim-note">各テストは短時間です。同じiPhone・時間帯・姿勢で測ると比較しやすくなります。服薬を自己判断で変えないでください。</p>
+<details class="setup-details" open><summary>今日のコンディションを記録（任意）</summary>
+<div class="choices">
+<div class="field"><label for="sleep">今の眠気（主観）</label><select id="sleep"><option value="">記録しない</option><option value="1">1：眠くない</option><option value="2">2：やや眠い</option><option value="3">3：眠い</option><option value="4">4：かなり眠い</option><option value="5">5：非常に眠い</option></select></div>
+<div class="field"><label for="fatigue">今の疲労感（主観）</label><select id="fatigue"><option value="">記録しない</option><option value="1">1：ほぼない</option><option value="2">2：少しある</option><option value="3">3：ある</option><option value="4">4：強い</option><option value="5">5：非常に強い</option></select></div>
+<div class="field"><label for="sleepHours">昨夜の睡眠時間（任意・時間）</label><input id="sleepHours" type="number" min="0" max="24" step="0.5" placeholder="例：7.5"></div>
+<div class="field"><label for="notes">メモ（任意・服薬時刻や体調など）</label><input id="notes" type="text" maxlength="140" placeholder="例：昨夜22時に服薬、頭痛あり"></div>
+</div></details>
+</section>
+<section class="panel" id="testsPanel"><h2>テストを選択 <span class="pill" id="completedPill">0 / 3 完了</span></h2>
+<div class="tests" role="group" aria-label="テスト選択">
+<button class="test-tab active" data-test="reaction" type="button">① 反応速度 <small>8回・約30秒</small></button>
+<button class="test-tab" data-test="search" type="button">② 選択的注意 <small>1→20の順</small></button>
+<button class="test-tab" data-test="inhibit" type="button">③ 抑制・集中 <small>30問・約40秒</small></button>
+</div>
+<div id="intro"><h3 id="testTitle" style="margin-top:17px">① 反応速度</h3><p class="muted" id="testExplain">灰色の画面が緑になったら、できるだけ早くタップ。緑になる前に押すとフライングです。</p></div>
+<button class="stage" id="stage" type="button" aria-live="off" disabled>「開始する」を押してください</button>
+<div id="numberGrid" class="number-grid hidden" aria-label="数字探し"></div>
+<div class="status" id="status" aria-live="polite"></div><p class="hint">※反応速度は画面表示・端末の遅延にも左右され、絶対値で能力を判定できません。</p>
+<div class="button-row"><button class="primary" id="startBtn" type="button">① 反応速度を開始する</button><button class="outline hidden" id="abortBtn" type="button">中断</button></div>
+<div class="result-line hidden" id="testResult" aria-live="polite"></div>
+</section>
+<section class="panel"><h2>今回の結果</h2><div class="grid" id="currentMetrics"><div class="metric"><b>—</b><small>反応速度（中央値）</small></div><div class="metric"><b>—</b><small>数字探し（所要秒）</small></div><div class="metric"><b>—</b><small>抑制テスト（正答率）</small></div></div><p class="muted" id="compareText">過去の同じ端末・条件での結果と比べてください。数値だけで正常／異常は判定しません。</p><div class="button-row"><button id="saveBtn" class="primary" type="button" disabled>今回の結果を保存</button><button id="resetBtn" class="secondary" type="button">今回のテスト結果をリセット</button></div><p class="tiny">保存先はこの端末のブラウザ／ホーム画面アプリ内です。サーバー送信はありません。Safariとホーム画面版では履歴が共有されない場合があります。定期的にCSVを書き出してください。</p></section>
+<section class="panel"><h2>記録履歴</h2><div class="history" id="historyContainer"><p class="muted">記録はまだありません。</p></div><div class="button-row"><button class="secondary" id="csvBtn" type="button">CSVを保存・共有</button><button class="danger" id="clearBtn" type="button">このブラウザの履歴を削除</button></div><p class="tiny" id="storageNotice">履歴はこの端末だけに保存。機種変更・ブラウザデータ削除・アプリ削除に備え、CSVを保管してください。</p></section>
+<section class="panel"><h2>結果の読み方</h2><p class="muted">反応速度は小さいほど速く、数字探しは短時間かつミスが少ないほど良い傾向です。抑制テストは「押すべき時に押せたか／押してはいけない時に押していないか」を確認します。最初の数回は操作に慣れるだけでも成績が上がります。5回程度以上の同条件の記録から、個人内の変化を見る用途を想定しています。</p><p class="muted">医療用の標準化検査、診断、薬の因果関係の確認、運転適性の判定を目的とした検査ではありません。端末・OS・ブラウザによってミリ秒値に差が生じます。</p><p class="tiny">独自の簡易課題です。臨床で使用する検査を再現したものではなく、薬の副作用の有無や安全運転の可否は判断できません。</p></section>
+</main>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const tabs=[...document.querySelectorAll('.test-tab')];
+const config={reaction:{title:'① 反応速度',explain:'灰色の画面が緑になったら、できるだけ早くタップ。緑になる前に押すとフライングです。',start:'① 反応速度を開始する'},search:{title:'② 選択的注意（数字探し）',explain:'1から20まで数字を順にタップ。時間と押し間違いを記録します。画面の大きさや指の動かし方も結果に影響します。',start:'② 数字探しを開始する'},inhibit:{title:'③ 抑制・集中（Go / No-Go）',explain:'緑の「●」だけ素早くタップ。赤の「×」では押さないでください。30回の刺激が自動的に切り替わります。',start:'③ 抑制テストを開始する'}};
+let selected='reaction',active=false,runId=0,timeouts=[],phase='idle',samples=[],falseStarts=0,misses=0,searchNext=1,searchMistakes=0,searchStarted=0,inhibitList=[],inhibitIndex=0,inhibitHits=0,inhibitMisses=0,inhibitFalse=0,inhibitCorrectReject=0,inhibitPremature=0,inhibitRts=[],responded=false,stimulusAt=0,results={},lastSavedFingerprint=null;
+const storeKey='personal_condition_selfcheck_v1';
+function setTimer(fn,ms){const token=runId;const id=setTimeout(()=>{if(token===runId)fn()},ms);timeouts.push(id);return id}
+function clearTimers(){timeouts.forEach(clearTimeout);timeouts=[];runId++}
+function median(arr){if(!arr.length)return null;const a=[...arr].sort((x,y)=>x-y),n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2}
+function fmtNum(n,places=0){return n==null?'—':Number(n).toFixed(places)}
+function setStage(text,cls,enabled=false){$('stage').className='stage '+cls;$('stage').innerHTML=text;$('stage').disabled=!enabled}
+function status(s){$('status').textContent=s}
+function setActive(v){active=v;$('startBtn').disabled=v;$('abortBtn').classList.toggle('hidden',!v);tabs.forEach(t=>t.disabled=v)}
+function select(which){if(active)return;selected=which;tabs.forEach(t=>{t.classList.toggle('active',t.dataset.test===which);t.setAttribute('aria-pressed',String(t.dataset.test===which))});$('testTitle').textContent=config[which].title;$('testExplain').textContent=config[which].explain;$('startBtn').textContent=config[which].start;$('numberGrid').classList.add('hidden');setStage('「開始する」を押してください','',false);$('testResult').classList.add('hidden');status(results[which]?'前回の結果があります。再試験すると今回の結果を上書きします。':'');}
+function abort(){clearTimers();setActive(false);phase='idle';$('numberGrid').classList.add('hidden');setStage('中断しました','',false);status('結果は更新されません。');}
+function start(){clearTimers();setActive(true);phase='idle';$('testResult').classList.add('hidden');$('numberGrid').classList.add('hidden');if(selected==='reaction')beginReaction();if(selected==='search')beginSearch();if(selected==='inhibit')beginInhibit()}
+function complete(kind,data,summary){clearTimers();setActive(false);phase='done';results[kind]=data;lastSavedFingerprint=null;setStage('完了！','result',false);$('numberGrid').classList.add('hidden');$('testResult').textContent=summary;$('testResult').classList.remove('hidden');status('ほかのテストも実施できます。');updateMetrics()}
+function beginReaction(){samples=[];falseStarts=0;misses=0;status('8回測定します。緑になるまで待ってください。');nextReaction()}
+function nextReaction(){if(samples.length+misses>=8){const med=median(samples);complete('reaction',{medianMs:med,valid:samples.length,misses,falseStarts},'反応速度（中央値）：'+fmtNum(med)+' ms ／ 反応成功 '+samples.length+'/8回 ／ 無反応 '+misses+'回 ／ フライング '+falseStarts+'回');return}phase='waiting';setStage('待機中…\n緑になったらタップ','wait',true);status((samples.length+misses+1)+' / 8 回目');setTimer(()=>{phase='go';stimulusAt=performance.now();setStage('<span class="symbol">●</span>今！ タップ','go',true);setTimer(()=>{if(phase==='go'){phase='feedback';misses++;setStage('時間切れ','',false);setTimer(nextReaction,700)}},1600)},1400+Math.random()*1900)}
+function onReactionTap(){if(phase==='waiting'){falseStarts++;phase='feedback';setStage('早押し！\n緑になるまで待ってね','',false);clearTimers();setTimer(nextReaction,900)}else if(phase==='go'){const ms=performance.now()-stimulusAt;phase='feedback';samples.push(Math.round(ms));setStage(Math.round(ms)+' ms','result',false);setTimer(nextReaction,750)}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function beginSearch(){searchNext=1;searchMistakes=0;phase='search';searchStarted=performance.now();setStage('1 → 20 を順番にタップ','wait',false);const grid=$('numberGrid');grid.innerHTML='';grid.classList.remove('hidden');shuffle(Array.from({length:20},(_,i)=>i+1)).forEach(n=>{const b=document.createElement('button');b.textContent=n;b.type='button';b.setAttribute('aria-label',n+'番');b.addEventListener('click',()=>{if(!active||phase!=='search')return;if(n===searchNext){b.disabled=true;b.classList.add('found');b.textContent='✓';searchNext++;status(searchNext<=20?'次は '+searchNext+' を探してください':'');if(searchNext===21){const sec=Math.round((performance.now()-searchStarted)/100)/10;complete('search',{seconds:sec,errors:searchMistakes},'数字探し：'+sec.toFixed(1)+'秒 ／ 押し間違い '+searchMistakes+'回')}}else{searchMistakes++;status('今は '+searchNext+' を探します（間違い '+searchMistakes+'回）')}});grid.appendChild(b)});status('まず「1」を見つけてください。')}
+function beginInhibit(){inhibitList=shuffle([...Array(18).fill(true),...Array(12).fill(false)]);inhibitIndex=0;inhibitHits=0;inhibitMisses=0;inhibitFalse=0;inhibitCorrectReject=0;inhibitPremature=0;inhibitRts=[];status('緑「●」ならタップ、赤「×」なら何もしない。');nextInhibit()}
+function nextInhibit(){if(inhibitIndex>=30){const accuracy=Math.round(100*(inhibitHits+inhibitCorrectReject)/30);complete('inhibit',{accuracy,hits:inhibitHits,goMisses:inhibitMisses,falseAlarms:inhibitFalse,correctRejects:inhibitCorrectReject,premature:inhibitPremature,medianMs:median(inhibitRts)},'正答率 '+accuracy+'% ／ 緑の見逃し '+inhibitMisses+'回 ／ 赤の誤タップ '+inhibitFalse+'回 ／ 待機中の早押し '+inhibitPremature+'回');return}phase='inter';responded=false;setStage('＋','wait',true);status((inhibitIndex+1)+' / 30 問目');setTimer(()=>{phase='stim';stimulusAt=performance.now();const go=inhibitList[inhibitIndex];setStage(go?'<span class="symbol">●</span>押す':'<span class="symbol">×</span>押さない',go?'go':'nogo',true);setTimer(()=>{if(!responded){if(go)inhibitMisses++;else inhibitCorrectReject++}phase='feedback';setStage('','',false);inhibitIndex++;setTimer(nextInhibit,220)},880)},420)}
+function onInhibitTap(){if(phase==='inter'){inhibitPremature++;return}if(phase!=='stim'||responded)return;responded=true;const go=inhibitList[inhibitIndex];if(go){inhibitHits++;inhibitRts.push(Math.round(performance.now()-stimulusAt))}else inhibitFalse++;}
+$('stage').addEventListener('pointerdown',e=>{if(!active)return;e.preventDefault();if(selected==='reaction')onReactionTap();else if(selected==='inhibit')onInhibitTap()});
+$('stage').addEventListener('keydown',e=>{if(!active||!(e.key===' '||e.key==='Enter'))return;e.preventDefault();if(e.repeat)return;if(selected==='reaction')onReactionTap();else if(selected==='inhibit')onInhibitTap()});
+tabs.forEach(t=>t.addEventListener('click',()=>select(t.dataset.test)));
+$('startBtn').addEventListener('click',start);$('abortBtn').addEventListener('click',abort);
+function updateMetrics(){const r=results.reaction,s=results.search,i=results.inhibit;$('currentMetrics').innerHTML=`<div class="metric"><b>${r&&r.medianMs!=null?Math.round(r.medianMs)+' ms':'—'}</b><small>反応速度（中央値）${r?' / 無反応 '+r.misses+'回':''}</small></div><div class="metric"><b>${s?s.seconds.toFixed(1)+' 秒':'—'}</b><small>数字探し ${s?' / ミス '+s.errors+'回':''}</small></div><div class="metric"><b>${i?i.accuracy+'%':'—'}</b><small>抑制テスト ${i?' / 誤タップ '+i.falseAlarms+'回':''}</small></div>`;const done=Object.keys(results).length;$('completedPill').textContent=done+' / 3 完了';$('saveBtn').disabled=done===0 || lastSavedFingerprint===JSON.stringify(results);const history=loadHistory();if(r&&history.length){const past=history.filter(h=>h.reaction&&h.reaction.medianMs!=null).slice(-5).map(h=>h.reaction.medianMs);if(past.length>=3){const ref=median(past);$('compareText').textContent='参考：直近'+past.length+'件の反応速度の中央値 '+Math.round(ref)+' ms ／ 今回 '+Math.round(r.medianMs)+' ms。測定条件や練習効果の違いに注意。';return}}$('compareText').textContent='過去の同じ端末・条件での結果と比べてください。数値だけで正常／異常は判定しません。'}
+function loadHistory(){try{const v=JSON.parse(localStorage.getItem(storeKey)||'[]');return Array.isArray(v)?v:[]}catch(e){return []}}
+function writeHistory(rows){try{localStorage.setItem(storeKey,JSON.stringify(rows));return true}catch(e){$('storageNotice').textContent='この環境では履歴を保存できません。CSV書き出しを使ってください。';return false}}
+function record(){if(!Object.keys(results).length)return;const hours=$('sleepHours').value.trim();if(hours&&(!Number.isFinite(Number(hours))||+hours<0||+hours>24)){alert('睡眠時間は0～24時間で入力してください。');return}const history=loadHistory();const entry={timestamp:new Date().toISOString(),sleep:$('sleep').value,fatigue:$('fatigue').value,sleepHours:hours,note:$('notes').value.trim(),reaction:results.reaction||null,search:results.search||null,inhibit:results.inhibit||null};history.push(entry);if(writeHistory(history.slice(-100))){lastSavedFingerprint=JSON.stringify(results);updateMetrics();status('今回の結果を保存しました。');renderHistory()}else alert('保存できませんでした。CSV書き出しは利用できます。')}
+$('saveBtn').addEventListener('click',record);
+$('resetBtn').addEventListener('click',()=>{if(active)abort();results={};lastSavedFingerprint=null;select(selected);updateMetrics()});
+function escapeHTML(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderHistory(){
+ const history=loadHistory();
+ if(!history.length){$('historyContainer').innerHTML='<p class="muted">記録はまだありません。</p>';return}
+ const last=history.slice().reverse().slice(0,20);
+ const cards=last.map(h=>'<article class="history-card"><strong>'+escapeHTML(new Date(h.timestamp).toLocaleString('ja-JP'))+'</strong><div class="history-grid">'
+ +'<div><b>'+escapeHTML(h.reaction?.medianMs!=null?Math.round(h.reaction.medianMs)+' ms':'—')+'</b>反応速度</div>'
+ +'<div><b>'+escapeHTML(h.search?h.search.seconds+' 秒':'—')+'</b>数字探し</div>'
+ +'<div><b>'+escapeHTML(h.inhibit?h.inhibit.accuracy+'%':'—')+'</b>抑制正答率</div></div>'
+ +'<div class="history-note">眠気 '+escapeHTML(h.sleep||'—')+' / 疲労 '+escapeHTML(h.fatigue||'—')+' / 睡眠 '+escapeHTML(h.sleepHours||'—')+'時間'
+ +(h.note?' / '+escapeHTML(h.note):'')+'</div></article>').join('');
+ $('historyContainer').innerHTML=cards+'<p class="tiny">直近20件を表示。CSVには保存済み全件（最大100件）が含まれます。</p>';
+}
+function csvCell(x){let str=x==null?'':String(x);if(/^[=+@\-\t\r]/.test(str))str="'"+str;return '"'+str.replace(/"/g,'""')+'"'}
+async function exportCSV(){const history=loadHistory();if(!history.length){alert('保存済みの記録がありません。先に「端末に記録」を押してください。');return}const heads=['日時','眠気(1-5)','疲労(1-5)','睡眠時間(h)','メモ','反応中央値(ms)','反応成功回','反応無反応回','反応フライング回','数字探し(秒)','数字探しミス','抑制正答率(%)','抑制ヒット','抑制見逃し','抑制誤タップ','抑制正しい非反応','抑制待機中早押し','抑制反応中央値(ms)'];const lines=[heads,...history.map(h=>[new Date(h.timestamp).toLocaleString('ja-JP'),h.sleep,h.fatigue,h.sleepHours,h.note,h.reaction?.medianMs,h.reaction?.valid,h.reaction?.misses,h.reaction?.falseStarts,h.search?.seconds,h.search?.errors,h.inhibit?.accuracy,h.inhibit?.hits,h.inhibit?.goMisses,h.inhibit?.falseAlarms,h.inhibit?.correctRejects,h.inhibit?.premature,h.inhibit?.medianMs])].map(row=>row.map(csvCell).join(','));const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+const filename='condition-check-'+new Date().toISOString().slice(0,10)+'.csv';
+try{if(typeof File==='function'&&navigator.canShare&&navigator.share){const file=new File([blob],filename,{type:'text/csv'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'コンディションチェック記録'});return;}}}catch(e){if(e && e.name==='AbortError')return;}
+const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('csvBtn').addEventListener('click',exportCSV);
+$('clearBtn').addEventListener('click',()=>{if(confirm('このブラウザに保存したチェック履歴をすべて削除します。元に戻せません。削除しますか？')){try{localStorage.removeItem(storeKey);renderHistory();updateMetrics()}catch(e){alert('履歴の削除に失敗しました。')}}});
+window.addEventListener('visibilitychange',()=>{if(document.hidden&&active)abort();if(!document.hidden)renderHistory()});
+tabs.forEach(t=>t.setAttribute('aria-pressed',String(t.dataset.test===selected)));
+renderHistory();updateMetrics();
+if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
+window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "注意・集中・反応 コンディションチェック",
+  "short_name": "コンディション",
+  "description": "注意・集中・反応の変化を記録する個人用簡易チェック",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8f9",
+  "theme_color": "#0d625e",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
