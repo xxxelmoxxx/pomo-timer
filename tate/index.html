@@ -41,6 +41,9 @@ main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:2
 @media(max-width:790px){header{gap:8px}.headerTools{gap:4px}.momentLink{padding:8px 9px;min-height:44px;font-size:11px}.brand{gap:8px}.brand p{font-size:11px;line-height:1.5}.headerTools .offline{padding:5px 7px;font-size:10px}} 
 /* トリミング割合の直接入力と前の写真の設定コピー */
 .cropReuseRow{display:flex;flex-direction:column;gap:5px;grid-column:1/-1;margin:10px 0 6px}.cropReuseRow .button{white-space:normal;line-height:1.45;min-height:41px;width:100%}.cropReuseRow small{color:#697a80;font-size:11px;line-height:1.5;overflow-wrap:anywhere}.cropNumber{display:inline-flex;align-items:center;gap:4px;flex-shrink:0}.cropNumber input{width:66px;min-width:0;box-sizing:border-box;border:1px solid #c8d4d4;border-radius:8px;padding:7px 5px;font-size:15px;font-weight:700;text-align:right;background:#fff;color:#253e44;font-variant-numeric:tabular-nums;min-height:37px}.cropNumber span{font-weight:700}.cropNumber input::-webkit-inner-spin-button,.cropNumber input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.cropNumber input[type=number]{-moz-appearance:textfield;appearance:textfield}
+/* ±0.5％のタップ操作：iPhoneでも押しやすいサイズ */
+.cropNumber{gap:5px}.cropNumber .cropStep{display:inline-grid;place-items:center;min-width:37px;width:37px;height:39px;min-height:39px;flex-shrink:0;border:1px solid #bcd2d1;background:#f3faf9;color:#246c6c;border-radius:9px;padding:0;font-size:16px;font-weight:700;line-height:1}.cropNumber .cropStep:active:not(:disabled){background:#dcefeb}.cropNumber .cropStep:disabled{opacity:.35}.cropNumber input{width:55px}.sliderRow>div{gap:7px;align-items:center}.cropStep:focus-visible{outline:3px solid #72a4ce;outline-offset:2px}
+@media(max-width:790px){.sliders{grid-template-columns:1fr}.sliders h3,.cropReuseRow{grid-column:1}.sliderRow{margin:8px 0}.cropNumber .cropStep{width:42px;min-width:42px;height:42px;min-height:42px}}
 </style>
 </head>
 <body>
@@ -66,7 +69,7 @@ main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);gap:2
 <div id="editorModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="editorTitle" hidden>
 <div class="modalcard"><div class="modalhead"><h2 id="editorTitle">写真を切り抜く</h2><button class="close" type="button" id="closeEditor" aria-label="閉じる">×</button></div><p class="modaldesc">白い枠をドラッグして切り抜く範囲を調整できます。下の数値欄に％を直接入力するか、スライダーで調整してください。前の写真と同じ割合も使えます。</p>
 <div class="editorCols"><div class="stageWrap"><div class="editorStage" id="editorStage"><img id="editorImage" alt="切り抜き対象画像"><div class="cropBox" id="cropBox"><i class="handle" data-dir="nw"></i><i class="handle" data-dir="n"></i><i class="handle" data-dir="ne"></i><i class="handle" data-dir="e"></i><i class="handle" data-dir="se"></i><i class="handle" data-dir="s"></i><i class="handle" data-dir="sw"></i><i class="handle" data-dir="w"></i></div></div></div>
-<div class="sliders"><h3>切り取る割合（数値入力もできます）</h3><div class="cropReuseRow"><button class="button tiny" id="reusePreviousCrop" type="button" disabled>↶ 前の写真と同じ割合を使う</button><small id="reuseHint">写真を選択してください。</small></div><div class="sliderRow"><div><label for="numTop">上</label><span class="cropNumber"><input id="numTop" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="上を切り取る割合（パーセント）"><span aria-hidden="true">%</span></span></div><input id="trimTop" type="range" min="0" max="98" value="0" step="0.1" aria-label="上の切り取る割合をスライダーで調整"></div><div class="sliderRow"><div><label for="numBottom">下</label><span class="cropNumber"><input id="numBottom" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="下を切り取る割合（パーセント）"><span aria-hidden="true">%</span></span></div><input id="trimBottom" type="range" min="0" max="98" value="0" step="0.1" aria-label="下の切り取る割合をスライダーで調整"></div><div class="sliderRow"><div><label for="numLeft">左</label><span class="cropNumber"><input id="numLeft" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="左を切り取る割合（パーセント）"><span aria-hidden="true">%</span></span></div><input id="trimLeft" type="range" min="0" max="98" value="0" step="0.1" aria-label="左の切り取る割合をスライダーで調整"></div><div class="sliderRow"><div><label for="numRight">右</label><span class="cropNumber"><input id="numRight" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="右を切り取る割合（パーセント）"><span aria-hidden="true">%</span></span></div><input id="trimRight" type="range" min="0" max="98" value="0" step="0.1" aria-label="右の切り取る割合をスライダーで調整"></div></div></div>
+<div class="sliders"><h3>切り取る割合（◀ ▶ は0.5％ずつ調整）</h3><div class="cropReuseRow"><button class="button tiny" id="reusePreviousCrop" type="button" disabled>↶ 前の写真と同じ割合を使う</button><small id="reuseHint">写真を選択してください。</small></div><div class="sliderRow"><div><label for="numTop">上</label><span class="cropNumber"><button class="cropStep" type="button" id="decTop" aria-label="上の切り取り割合を0.5％減らす">◀</button><input id="numTop" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="上を切り取る割合（パーセント）"><span aria-hidden="true">%</span><button class="cropStep" type="button" id="incTop" aria-label="上の切り取り割合を0.5％増やす">▶</button></span></div><input id="trimTop" type="range" min="0" max="98" value="0" step="0.1" aria-label="上の切り取る割合をスライダーで調整"></div><div class="sliderRow"><div><label for="numBottom">下</label><span class="cropNumber"><button class="cropStep" type="button" id="decBottom" aria-label="下の切り取り割合を0.5％減らす">◀</button><input id="numBottom" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="下を切り取る割合（パーセント）"><span aria-hidden="true">%</span><button class="cropStep" type="button" id="incBottom" aria-label="下の切り取り割合を0.5％増やす">▶</button></span></div><input id="trimBottom" type="range" min="0" max="98" value="0" step="0.1" aria-label="下の切り取る割合をスライダーで調整"></div><div class="sliderRow"><div><label for="numLeft">左</label><span class="cropNumber"><button class="cropStep" type="button" id="decLeft" aria-label="左の切り取り割合を0.5％減らす">◀</button><input id="numLeft" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="左を切り取る割合（パーセント）"><span aria-hidden="true">%</span><button class="cropStep" type="button" id="incLeft" aria-label="左の切り取り割合を0.5％増やす">▶</button></span></div><input id="trimLeft" type="range" min="0" max="98" value="0" step="0.1" aria-label="左の切り取る割合をスライダーで調整"></div><div class="sliderRow"><div><label for="numRight">右</label><span class="cropNumber"><button class="cropStep" type="button" id="decRight" aria-label="右の切り取り割合を0.5％減らす">◀</button><input id="numRight" type="number" inputmode="decimal" min="0" max="98" step="0.1" value="0" aria-label="右を切り取る割合（パーセント）"><span aria-hidden="true">%</span><button class="cropStep" type="button" id="incRight" aria-label="右の切り取り割合を0.5％増やす">▶</button></span></div><input id="trimRight" type="range" min="0" max="98" value="0" step="0.1" aria-label="右の切り取る割合をスライダーで調整"></div></div></div>
 <div class="editorfoot"><button class="button" id="resetCrop" type="button">切り抜きをリセット</button><div class="right"><button class="button" id="cancelCrop" type="button">キャンセル</button><button class="button primary" id="saveCrop" type="button">この範囲で確定</button></div></div></div></div>
 <script>
 (()=>{'use strict';
@@ -194,6 +197,8 @@ function syncEditor(skipNumberSide=null){
    slider.value=val;
    number.max=round(maxAllowed);
    if(side!==skipNumberSide)number.value=val;
+   $('dec'+side).disabled=vals[side]<=0.00001;
+   $('inc'+side).disabled=vals[side]>=maxAllowed-0.00001;
  }
 }
 function sliderUpdate(side,v,skipNumberSide=null){
@@ -209,6 +214,11 @@ function sliderUpdate(side,v,skipNumberSide=null){
   case 'Right':r.w=clamp(1-r.x-val,min,1-r.x);break;
  }
  syncEditor(skipNumberSide&&v<=maxAllowed?skipNumberSide:null);
+}
+function stepCrop(side,delta){
+ if(!draft)return;
+ const current={Top:draft.y*100,Bottom:(1-draft.y-draft.h)*100,Left:draft.x*100,Right:(1-draft.x-draft.w)*100}[side];
+ sliderUpdate(side,Math.round((current+delta)*10)/10);
 }
 function reusePreviousCrop(){
  const index=items.findIndex(i=>i.id===activeId);
@@ -231,6 +241,8 @@ $('resetCrop').addEventListener('click',()=>{draft=fullCrop();syncEditor();});$(
 $('reusePreviousCrop').addEventListener('click',reusePreviousCrop);
 ['Top','Bottom','Left','Right'].forEach(side=>{
  $('trim'+side).addEventListener('input',e=>sliderUpdate(side,Number(e.target.value)));
+ $('dec'+side).addEventListener('click',()=>stepCrop(side,-0.5));
+ $('inc'+side).addEventListener('click',()=>stepCrop(side,0.5));
  const number=$('num'+side);
  number.addEventListener('keydown',e=>{if(['e','E','+','-'].includes(e.key))e.preventDefault();});
  number.addEventListener('input',()=>{
